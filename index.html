@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darts Practice Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 50%;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-size: 1.2em;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .error {
+            background-color: #ffe6e6;
+            color: #d32f2f;
+            padding: 10px;
+            margin: 10px auto;
+            width: 50%;
+            display: none;
+            border-radius: 5px;
+        }
+        .timer {
+            font-size: 1.2em;
+            margin: 10px;
+        }
+        .input-section {
+            margin: 20px 0;
+        }
+        input[type="number"] {
+            padding: 5px;
+            font-size: 1em;
+            width: 100px;
+            margin: 0 10px;
+        }
+        input[type="text"] {
+            padding: 5px;
+            font-size: 1em;
+            width: 150px;
+            margin: 0 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .restart-btn {
+            background-color: #555;
+        }
+        .restart-btn:hover {
+            background-color: #444;
+        }
+        .stats {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Darts Practice Tool</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Throw</th>
+                <th>Req</th>
+            </tr>
+        </thead>
+        <tbody id="scoreTable">
+            <tr>
+                <td colspan="2">Start at 501</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="errorMessage" class="error">
+        You made an error! Try again...
+    </div>
+
+    <div class="timer">
+        Play throws: <span id="throws">0</span> | <span id="timer">0</span> sec
+    </div>
+
+    <div class="input-section">
+        <label>Throw: <input type="text" id="throwInput" readonly value=""></label>
+        <label>Throw Total: <input type="number" id="throwTotalInput" placeholder="Enter total"></label>
+        <label>Req: <input type="number" id="reqInput" placeholder="Enter remaining"></label>
+    </div>
+
+    <button onclick="addScore()">Add Score</button>
+    <button class="restart-btn" onclick="restartGame()">Restart</button>
+
+    <div class="stats">
+        <p>You made <span id="turns">0</span> turn(s).</p>
+        <p>Last Throw: <span id="lastThrow">0</span> sec.</p>
+        <p>Average counting time: <span id="avgTime">0</span> sec.</p>
+    </div>
+
+    <script>
+        let currentScore = 501;
+        let throwsCount = 0;
+        let turns = 0;
+        let startTime = Date.now();
+        let lastThrowTime = Date.now();
+        let totalThrowTime = 0;
+        let correctTotal = 0;
+        let dartThrows = [];
+        let isTurnReady = false;
+        let totalThrowsSum = 0; // Cumulative sum of accepted throw totals
+        let gameFinished = false; // Flag to stop generating new turns
+
+        // Generate a single dart throw (e.g., S20, D15, T19)
+        function generateDartThrow(targetScore = null) {
+            const sections = Array.from({length: 20}, (_, i) => i + 1).concat([25]);
+            let typeThrow, section, value;
+            if (targetScore !== null && targetScore > 0 && targetScore <= 40) {
+                // For final turn, ensure the last dart is a double to finish
+                let remaining = targetScore;
+                if (remaining >= 40) {
+                    section = 20; // Max double for simplicity
+                    typeThrow = 'D';
+                    value = 40;
+                } else if (remaining >= 2) {
+                    section = Math.floor(remaining / 2);
+                    typeThrow = 'D';
+                    value = section * 2;
+                    if (value > remaining) section = Math.floor(remaining / 2);
+                } else {
+                    section = remaining;
+                    typeThrow = 'S';
+                    value = section;
+                }
+                return { throw: `${typeThrow}${section}`, value };
+            } else {
+                section = sections[Math.floor(Math.random() * sections.length)];
+                typeThrow = section === 25 ? (Math.random() < 0.5 ? 'S' : 'D') : ['S', 'D', 'T'][Math.floor(Math.random() * 3)];
+                value = typeThrow === 'S' ? section : typeThrow === 'D' ? section * 2 : section * 3;
+            }
+            return { throw: `${typeThrow}${section}`, value };
+        }
+
+        // Generate up to 3 dart throws one by one with 1.5-second interval
+        async function generateTurn() {
+            if (gameFinished) return; // Stop generating if game is finished
+            dartThrows = [];
+            let total = 0;
+            isTurnReady = false;
+            document.getElementById('throwInput').value = '';
+            let isFinalTurn = currentScore <= 40; // Consider final turn if score is low
+            let targetScore = isFinalTurn ? currentScore : null;
+            let dartCount = 0;
+
+            while (dartCount < 3 && total < (targetScore || 180)) {
+                const { throw: dartThrow, value } = generateDartThrow(targetScore ? targetScore - total : null);
+                dartThrows.push(dartThrow);
+                total += value;
+                document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                dartCount++;
+                if (isFinalTurn && total >= targetScore) break; // Stop if total meets or exceeds target
+            }
+            // Adjust for final turn to exactly match with a double as the last dart
+            if (isFinalTurn && total !== currentScore) {
+                let remaining = currentScore - total + (dartThrows[dartCount - 1].startsWith('D') ? parseInt(dartThrows[dartCount - 1].slice(1)) * 2 : dartThrows[dartCount - 1].startsWith('T') ? parseInt(dartThrows[dartCount - 1].slice(1)) * 3 : parseInt(dartThrows[dartCount - 1].slice(1)));
+                if (remaining > 0 && remaining <= 20) {
+                    dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
+                    total = currentScore; // Force exact match with a double
+                } else if (remaining === 25) {
+                    dartThrows[dartCount - 1] = 'D25';
+                    total = currentScore;
+                } else if (remaining > 0) {
+                    // Adjust previous darts to allow a double finish
+                    let adjusted = false;
+                    for (let i = dartCount - 2; i >= 0; i--) {
+                        let prevValue = dartThrows[i].startsWith('D') ? parseInt(dartThrows[i].slice(1)) * 2 : dartThrows[i].startsWith('T') ? parseInt(dartThrows[i].slice(1)) * 3 : parseInt(dartThrows[i].slice(1));
+                        let newSection = Math.floor((total - remaining + prevValue) / (dartThrows[i].startsWith('T') ? 3 : 1));
+                        if (newSection * (dartThrows[i].startsWith('T') ? 3 : 1) <= prevValue && newSection >= 1 && newSection <= 20) {
+                            dartThrows[i] = `${dartThrows[i].startsWith('T') ? 'T' : 'S'}${newSection}`;
+                            remaining = currentScore - (total - prevValue + (newSection * (dartThrows[i].startsWith('T') ? 3 : 1)));
+                            dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
+                            total = currentScore;
+                            adjusted = true;
+                            break;
+                        }
+                    }
+                    if (!adjusted && remaining > 0) {
+                        dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
+                        total = currentScore;
+                    }
+                }
+                document.getElementById('throwInput').value = dartThrows.join(' ');
+            }
+            correctTotal = total;
+            isTurnReady = true;
+        }
+
+        // Update the timer
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('timer').textContent = elapsed;
+        }
+
+        // Handle adding a score
+        function addScore() {
+            const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
+            const reqInput = parseInt(document.getElementById('reqInput').value);
+            const errorMessage = document.getElementById('errorMessage');
+            const timerValue = document.getElementById('timer').textContent;
+
+            if (!isTurnReady) {
+                errorMessage.textContent = 'Please wait for the turn to complete!';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (isNaN(throwTotalInput) || isNaN(reqInput)) {
+                errorMessage.textContent = 'Please enter valid numbers for both fields!';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (throwTotalInput !== correctTotal) {
+                errorMessage.textContent = `Incorrect Throw total! The correct total for ${dartThrows.join(' ')} is ${correctTotal}. Try again...`;
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            const expectedReq = currentScore - throwTotalInput;
+            if (reqInput !== expectedReq) {
+                errorMessage.textContent = `Incorrect Req! After throwing ${throwTotalInput}, the remaining score should be ${expectedReq}. Try again...`;
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // Update the cumulative sum of throws
+            totalThrowsSum += throwTotalInput;
+
+            // Strict consistency check
+            const expectedTotalThrows = 501 - reqInput;
+            if (Math.abs(expectedTotalThrows - totalThrowsSum) > 1) {
+                errorMessage.textContent = `Inconsistent scoring! Expected total throws (${expectedTotalThrows}) does not match cumulative sum (${totalThrowsSum}). Consider restarting.`;
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            errorMessage.style.display = 'none';
+            currentScore = reqInput;
+            throwsCount += 3;
+            turns++;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${throwTotalInput}</td><td>${currentScore}</td>`;
+            document.getElementById('scoreTable').appendChild(row); // Append to bottom
+
+            document.getElementById('throws').textContent = throwsCount;
+            document.getElementById('turns').textContent = turns;
+
+            const throwTime = (Date.now() - lastThrowTime) / 1000;
+            lastThrowTime = Date.now();
+            totalThrowTime += throwTime;
+            document.getElementById('lastThrow').textContent = throwTime.toFixed(2);
+            document.getElementById('avgTime').textContent = (totalThrowTime / turns).toFixed(2);
+
+            if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
+                // Win condition: Exact match with a double
+                alert(`This page says\nCongratulations! You finished with a double in ${throwsCount} throws and ${turns} turns!\nTime: **${timerValue} sec**`);
+                gameFinished = true; // Stop generating new turns
+            } else if (currentScore === 0 && !dartThrows.some(d => d.startsWith('D'))) {
+                errorMessage.textContent = 'To finish, the last turn must include a double! Try again...';
+                errorMessage.style.display = 'block';
+                currentScore = throwTotalInput; // Revert to the score before this turn
+                totalThrowsSum -= throwTotalInput;
+                throwsCount -= 3;
+                turns--;
+                document.getElementById('scoreTable').deleteRow(document.getElementById('scoreTable').rows.length - 1);
+                generateTurn(); // Repeat the round
+            }
+
+            if (!gameFinished) {
+                generateTurn();
+            }
+            document.getElementById('throwTotalInput').value = '';
+            document.getElementById('reqInput').value = '';
+        }
+
+        // Restart the game
+        function restartGame() {
+            currentScore = 501;
+            throwsCount = 0;
+            turns = 0;
+            startTime = Date.now();
+            lastThrowTime = Date.now();
+            totalThrowTime = 0;
+            totalThrowsSum = 0;
+            gameFinished = false;
+            document.getElementById('scoreTable').innerHTML = '<tr><td colspan="2">Start at 501</td></tr>';
+            document.getElementById('throws').textContent = '0';
+            document.getElementById('turns').textContent = '0';
+            document.getElementById('lastThrow').textContent = '0';
+            document.getElementById('avgTime').textContent = '0';
+            document.getElementById('timer').textContent = '0';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('throwTotalInput').value = '';
+            document.getElementById('reqInput').value = '';
+            generateTurn();
+        }
+
+        setInterval(updateTimer, 1000);
+        generateTurn();
+    </script>
+</body>
+</html>
