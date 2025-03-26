@@ -20,6 +20,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
         }
 
         h1 {
@@ -28,10 +35,82 @@
             margin-bottom: 20px;
         }
 
+        body.dark-mode h1 {
+            color: #fff;
+        }
+
         h2 {
             font-size: 20px;
             color: #333;
             margin: 20px 0;
+        }
+
+        body.dark-mode h2 {
+            color: #fff;
+        }
+
+        /* Dark Mode Toggle Switch */
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .dark-mode-toggle label {
+            font-size: 16px;
+            margin-right: 10px;
+            color: #666;
+        }
+
+        body.dark-mode .dark-mode-toggle label {
+            color: #ccc;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
         }
 
         /* Starting Score Section */
@@ -45,10 +124,19 @@
             max-width: 400px;
         }
 
+        body.dark-mode .start-score {
+            background-color: #4a704a;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+
         .start-score p {
             font-size: 20px;
             font-weight: bold;
             color: #000;
+        }
+
+        body.dark-mode .start-score p {
+            color: #fff;
         }
 
         /* Timer Section */
@@ -58,9 +146,17 @@
             margin-bottom: 20px;
         }
 
+        body.dark-mode .timer {
+            color: #ccc;
+        }
+
         .timer span {
             color: #000;
             font-weight: bold;
+        }
+
+        body.dark-mode .timer span {
+            color: #fff;
         }
 
         /* Input Section */
@@ -78,6 +174,10 @@
             text-align: left;
         }
 
+        body.dark-mode .input-section label {
+            color: #ccc;
+        }
+
         .input-section input[type="text"],
         .input-section input[type="number"] {
             width: 100%;
@@ -86,6 +186,15 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             margin-bottom: 15px;
+            background-color: #fff;
+            color: #000;
+        }
+
+        body.dark-mode .input-section input[type="text"],
+        body.dark-mode .input-section input[type="number"] {
+            background-color: #444;
+            border-color: #666;
+            color: #fff;
         }
 
         .input-section input[type="text"]:focus,
@@ -97,6 +206,10 @@
 
         .input-section input[readonly] {
             background-color: #f9f9f9;
+        }
+
+        body.dark-mode .input-section input[readonly] {
+            background-color: #555;
         }
 
         /* Buttons */
@@ -150,6 +263,11 @@
             display: none;
         }
 
+        body.dark-mode .error {
+            background-color: #d32f2f;
+            color: #fff;
+        }
+
         /* Stats Section */
         .stats {
             width: 90%;
@@ -159,6 +277,10 @@
             color: #666;
         }
 
+        body.dark-mode .stats {
+            color: #ccc;
+        }
+
         .stats p {
             margin-bottom: 8px;
         }
@@ -166,6 +288,10 @@
         .stats span {
             color: #000;
             font-weight: bold;
+        }
+
+        body.dark-mode .stats span {
+            color: #fff;
         }
 
         /* Leaderboard Section */
@@ -182,6 +308,11 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
+        body.dark-mode .leaderboard table {
+            background-color: #444;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+
         .leaderboard th,
         .leaderboard td {
             padding: 10px;
@@ -189,9 +320,19 @@
             border: 1px solid #ddd;
         }
 
+        body.dark-mode .leaderboard th,
+        body.dark-mode .leaderboard td {
+            border-color: #666;
+            color: #fff;
+        }
+
         .leaderboard th {
             background-color: #f5f5f5;
             font-weight: bold;
+        }
+
+        body.dark-mode .leaderboard th {
+            background-color: #555;
         }
 
         /* Modal Styles */
@@ -217,6 +358,12 @@
             text-align: center;
         }
 
+        body.dark-mode .modal-content {
+            background-color: #444;
+            border-color: #666;
+            color: #fff;
+        }
+
         .close-btn {
             color: #aaa;
             float: right;
@@ -225,8 +372,16 @@
             cursor: pointer;
         }
 
+        body.dark-mode .close-btn {
+            color: #ccc;
+        }
+
         .close-btn:hover {
             color: black;
+        }
+
+        body.dark-mode .close-btn:hover {
+            color: #fff;
         }
 
         .modal-content input[type="text"] {
@@ -236,6 +391,14 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             margin: 10px 0;
+            background-color: #fff;
+            color: #000;
+        }
+
+        body.dark-mode .modal-content input[type="text"] {
+            background-color: #555;
+            border-color: #666;
+            color: #fff;
         }
 
         .modal-content button {
@@ -257,11 +420,19 @@
             cursor: not-allowed;
         }
 
+        body.dark-mode .modal-content button:disabled {
+            background-color: #666;
+        }
+
         .modal-error {
             color: #d32f2f;
             font-size: 14px;
             margin-top: 10px;
             display: none;
+        }
+
+        body.dark-mode .modal-error {
+            color: #ff6666;
         }
 
         /* Toggle for Leaderboard */
@@ -270,6 +441,10 @@
             color: #2196F3;
             cursor: pointer;
             margin-bottom: 10px;
+        }
+
+        body.dark-mode .toggle-leaderboard {
+            color: #66b0ff;
         }
 
         .toggle-leaderboard:hover {
@@ -287,6 +462,15 @@
     </style>
 </head>
 <body>
+    <!-- Dark Mode Toggle -->
+    <div class="dark-mode-toggle">
+        <label for="darkModeSwitch">Dark Mode</label>
+        <label class="switch">
+            <input type="checkbox" id="darkModeSwitch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
     <h1>Darts Practice Tool</h1>
 
     <div class="start-score">
@@ -385,6 +569,26 @@
         let totalThrowsSum = 0;
         let gameFinished = false;
         let currentTimerValue = 0;
+
+        // Dark Mode Functionality
+        const darkModeSwitch = document.getElementById('darkModeSwitch');
+        
+        // Load dark mode preference from localStorage
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeSwitch.checked = true;
+        }
+
+        // Toggle dark mode
+        darkModeSwitch.addEventListener('change', () => {
+            if (darkModeSwitch.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
 
         // Function to format the current date and time as a string
         function formatDateTime() {
