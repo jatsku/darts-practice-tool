@@ -146,51 +146,40 @@
             color: #fff;
         }
 
-        /* Starting Score Section */
-        .start-score {
+        /* Current Score Section (Replaces Start at 501 and Progress Bar) */
+        .current-score {
             background-color: #e0f7e0;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
             width: 90%;
             max-width: 400px;
+            transition: transform 0.3s ease;
         }
 
-        body.dark-mode .start-score {
+        body.dark-mode .current-score {
             background-color: #4a704a;
-            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
         }
 
-        .start-score p {
-            font-size: 20px;
+        .current-score p {
+            font-size: 28px;
             font-weight: bold;
             color: #000;
         }
 
-        body.dark-mode .start-score p {
+        body.dark-mode .current-score p {
             color: #fff;
         }
 
-        /* Progress Bar */
-        .progress-bar {
-            width: 90%;
-            max-width: 400px;
-            height: 8px;
-            background-color: #ddd;
-            border-radius: 5px;
-            margin: 10px auto;
-            overflow: hidden;
+        .current-score p span {
+            font-size: 36px;
+            color: #4CAF50;
         }
 
-        body.dark-mode .progress-bar {
-            background-color: #555;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background-color: #4CAF50;
-            transition: width 0.3s;
+        body.dark-mode .current-score p span {
+            color: #66b0ff;
         }
 
         /* Timer Section */
@@ -557,18 +546,17 @@
                 font-size: 18px;
             }
 
-            .start-score {
-                padding: 10px;
-                margin-bottom: 10px;
+            .current-score {
+                padding: 15px;
+                margin-bottom: 15px;
             }
 
-            .start-score p {
-                font-size: 18px;
+            .current-score p {
+                font-size: 24px;
             }
 
-            .progress-bar {
-                height: 6px;
-                margin: 8px auto;
+            .current-score p span {
+                font-size: 30px;
             }
 
             .timer {
@@ -643,12 +631,8 @@
         <h1>Darts Practice Tool</h1>
     </div>
 
-    <div class="start-score">
-        <p>Start at 501</p>
-    </div>
-
-    <div class="progress-bar">
-        <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+    <div class="current-score">
+        <p>Current Score: <span id="currentScoreDisplay">501</span></p>
     </div>
 
     <div id="errorMessage" class="error">
@@ -757,10 +741,16 @@
         let gameFinished = false;
         let currentTimerValue = 0;
 
-        // Update progress bar
-        function updateProgressBar() {
-            const progress = ((501 - currentScore) / 501) * 100;
-            document.getElementById('progressBarFill').style.width = `${progress}%`;
+        // Update current score display
+        function updateCurrentScoreDisplay() {
+            const scoreDisplay = document.getElementById('currentScoreDisplay');
+            scoreDisplay.textContent = currentScore;
+            // Add a subtle animation on update
+            const currentScoreElement = document.querySelector('.current-score');
+            currentScoreElement.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                currentScoreElement.style.transform = 'scale(1)';
+            }, 300);
         }
 
         // Dark Mode Functionality
@@ -870,7 +860,7 @@
                     attempt++;
                     await addDoc(collection(db, 'leaderboard'), {
                         name: playerName,
-                        time: overallTimerValue,
+                        time: currentTimerValue,
                         date: recordDate,
                         timestamp: serverTimestamp()
                     });
@@ -1083,7 +1073,7 @@
                 document.getElementById('lastThrow').textContent = throwTime.toFixed(2);
                 document.getElementById('avgTime').textContent = (totalThrowTime / turns).toFixed(2);
 
-                updateProgressBar();
+                updateCurrentScoreDisplay();
 
                 if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
                     currentTimerValue = timerValue;
@@ -1132,7 +1122,7 @@
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('throwTotalInput').value = '';
                 document.getElementById('reqInput').value = '';
-                updateProgressBar();
+                updateCurrentScoreDisplay();
                 generateTurn();
             } catch (error) {
                 console.error('Error in restartGame:', error);
@@ -1176,7 +1166,7 @@
             updateLeaderboardDisplay();
             setInterval(updateTimer, 1000);
             generateTurn();
-            updateProgressBar();
+            updateCurrentScoreDisplay();
         });
 
         window.closeModalAndRestart = closeModalAndRestart;
