@@ -227,9 +227,6 @@
             }
         }
 
-        // Initialize leaderboard display on page load
-        updateLeaderboardDisplay();
-
         // Generate a single dart throw (e.g., S20, D15, T19)
         function generateDartThrow(targetScore = null) {
             const sections = Array.from({length: 20}, (_, i) => i + 1).concat([25]);
@@ -321,6 +318,7 @@
 
         // Handle adding a score
         async function addScore() {
+            alert('Add Score button clicked!');
             console.log('addScore called');
             try {
                 const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
@@ -419,6 +417,7 @@
 
         // Restart the game
         function restartGame() {
+            alert('Restart button clicked!');
             console.log('restartGame called');
             try {
                 currentScore = 501;
@@ -447,31 +446,41 @@
             }
         }
 
-        // Attach event listeners
-        const addScoreBtn = document.getElementById('addScoreBtn');
-        const restartBtn = document.getElementById('restartBtn');
+        // Wait for DOM to load before adding event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded');
+            const addScoreBtn = document.getElementById('addScoreBtn');
+            const restartBtn = document.getElementById('restartBtn');
 
-        if (addScoreBtn) {
-            addScoreBtn.addEventListener('click', () => {
-                console.log('Add Score button clicked');
-                addScore();
-            });
-        } else {
-            console.error('Add Score button not found');
-        }
+            if (addScoreBtn) {
+                console.log('Add Score button found');
+                addScoreBtn.addEventListener('click', () => {
+                    alert('Add Score button clicked!');
+                    console.log('Add Score button clicked');
+                    addScore();
+                });
+            } else {
+                console.error('Add Score button not found');
+            }
 
-        if (restartBtn) {
-            restartBtn.addEventListener('click', () => {
-                console.log('Restart button clicked');
-                restartGame();
-            });
-        } else {
-            console.error('Restart button not found');
-        }
+            if (restartBtn) {
+                console.log('Restart button found');
+                restartBtn.addEventListener('click', () => {
+                    alert('Restart button clicked!');
+                    console.log('Restart button clicked');
+                    restartGame();
+                });
+            } else {
+                console.error('Restart button not found');
+            }
 
-        // Start the timer and initial turn
-        setInterval(updateTimer, 1000);
-        generateTurn();
+            // Initialize leaderboard display on page load
+            updateLeaderboardDisplay();
+
+            // Start the timer and initial turn
+            setInterval(updateTimer, 1000);
+            generateTurn();
+        });
     </script>
 </body>
 </html>
