@@ -303,28 +303,38 @@
         function generateDartThrow(targetScore = null) {
             const sections = Array.from({length: 20}, (_, i) => i + 1).concat([25]);
             let typeThrow, section, value;
-            if (targetScore !== null && targetScore > 0 && targetScore <= 40) {
-                let remaining = targetScore;
-                if (remaining >= 40) {
-                    section = 20;
-                    typeThrow = 'D';
-                    value = 40;
-                } else if (remaining >= 2) {
-                    section = Math.floor(remaining / 2);
+
+            if (targetScore !== null && targetScore > 0) {
+                // Handle specific target scores for finishing
+                if (targetScore >= 40 && targetScore <= 60) {
+                    // Use a triple or single to get to a double
+                    const doubleValue = Math.floor((targetScore - 20) / 2); // Aim to leave a double
+                    if (doubleValue >= 1 && doubleValue <= 20) {
+                        section = targetScore - doubleValue * 2;
+                        typeThrow = section <= 20 ? 'S' : 'T';
+                        if (typeThrow === 'T') section = Math.floor(section / 3);
+                        value = typeThrow === 'S' ? section : section * 3;
+                        return { throw: `${typeThrow}${section}`, value };
+                    }
+                } else if (targetScore >= 2 && targetScore <= 40) {
+                    // Finish with a double
+                    section = Math.floor(targetScore / 2);
                     typeThrow = 'D';
                     value = section * 2;
-                    if (value > remaining) section = Math.floor(remaining / 2);
-                } else {
-                    section = remaining;
-                    typeThrow = 'S';
-                    value = section;
+                    return { throw: `${typeThrow}${section}`, value };
+                } else if (targetScore === 50) {
+                    // Bullseye to finish
+                    section = 25;
+                    typeThrow = 'D';
+                    value = 50;
+                    return { throw: `${typeThrow}${section}`, value };
                 }
-                return { throw: `${typeThrow}${section}`, value };
-            } else {
-                section = sections[Math.floor(Math.random() * sections.length)];
-                typeThrow = section === 25 ? (Math.random() < 0.5 ? 'S' : 'D') : ['S', 'D', 'T'][Math.floor(Math.random() * 3)];
-                value = typeThrow === 'S' ? section : typeThrow === 'D' ? section * 2 : section * 3;
             }
+
+            // Default random throw if no specific target
+            section = sections[Math.floor(Math.random() * sections.length)];
+            typeThrow = section === 25 ? (Math.random() < 0.5 ? 'S' : 'D') : ['S', 'D', 'T'][Math.floor(Math.random() * 3)];
+            value = typeThrow === 'S' ? section : typeThrow === 'D' ? section * 2 : section * 3;
             return { throw: `${typeThrow}${section}`, value };
         }
 
@@ -335,48 +345,77 @@
             let total = 0;
             isTurnReady = false;
             document.getElementById('throwInput').value = '';
-            let isFinalTurn = currentScore <= 40;
+            let isFinalTurn = currentScore <= 170; // 170 is the highest possible checkout with 3 darts (T20 T20 D25)
             let targetScore = isFinalTurn ? currentScore : null;
             let dartCount = 0;
 
-            while (dartCount < 3 && total < (targetScore || 180)) {
-                const { throw: dartThrow, value } = generateDartThrow(targetScore ? targetScore - total : null);
-                dartThrows.push(dartThrow);
-                total += value;
-                document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                dartCount++;
-                if (isFinalTurn && total >= targetScore) break;
-            }
-            if (isFinalTurn && total !== currentScore) {
-                let remaining = currentScore - total + (dartThrows[dartCount - 1].startsWith('D') ? parseInt(dartThrows[dartCount - 1].slice(1)) * 2 : dartThrows[dartCount - 1].startsWith('T') ? parseInt(dartThrows[dartCount - 1].slice(1)) * 3 : parseInt(dartThrows[dartCount - 1].slice(1)));
-                if (remaining > 0 && remaining <= 20) {
-                    dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
-                    total = currentScore;
-                } else if (remaining === 25) {
-                    dartThrows[dartCount - 1] = 'D25';
-                    total = currentScore;
-                } else if (remaining > 0) {
-                    let adjusted = false;
-                    for (let i = dartCount - 2; i >= 0; i--) {
-                        let prevValue = dartThrows[i].startsWith('D') ? parseInt(dartThrows[i].slice(1)) * 2 : dartThrows[i].startsWith('T') ? parseInt(dartThrows[i].slice(1)) * 3 : parseInt(dartThrows[i].slice(1));
-                        let newSection = Math.floor((total - remaining + prevValue) / (dartThrows[i].startsWith('T') ? 3 : 1));
-                        if (newSection * (dartThrows[i].startsWith('T') ? 3 : 1) <= prevValue && newSection >= 1 && newSection <= 20) {
-                            dartThrows[i] = `${dartThrows[i].startsWith('T') ? 'T' : 'S'}${newSection}`;
-                            remaining = currentScore - (total - prevValue + (newSection * (dartThrows[i].startsWith('T') ? 3 : 1)));
-                            dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
-                            total = currentScore;
-                            adjusted = true;
-                            break;
-                        }
+            if (isFinalTurn) {
+                // Generate darts to exactly match the target score, ending with a double
+                let remaining = targetScore;
+                while (dartCount < 3 && remaining > 0) {
+                    const { throw: dartThrow, value } = generateDartThrow(remaining);
+                    dartThrows.push(dartThrow);
+                    total += value;
+                    remaining -= value;
+                    document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    dartCount++;
+                }
+
+                // If we overshot or undershot, adjust the darts
+                if (remaining !== 0) {
+                    dartThrows = [];
+                    total = 0;
+                    remaining = targetScore;
+                    dartCount = 0;
+
+                    // First dart: Try to get close to a double
+                    if (remaining > 40) {
+                        const firstScore = Math.min(remaining - 32, 60); // Aim to leave a double (e.g., D16 = 32)
+                        const { throw: dartThrow, value } = generateDartThrow(firstScore);
+                        dartThrows.push(dartThrow);
+                        total += value;
+                        remaining -= value;
+                        document.getElementById('throwInput').value = dartThrow;
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        dartCount++;
                     }
-                    if (!adjusted && remaining > 0) {
-                        dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
-                        total = currentScore;
+
+                    // Second dart: Get closer if needed
+                    if (remaining > 40 && dartCount < 3) {
+                        const secondScore = Math.min(remaining - 32, 60);
+                        const { throw: dartThrow, value } = generateDartThrow(secondScore);
+                        dartThrows.push(dartThrow);
+                        total += value;
+                        remaining -= value;
+                        document.getElementById('throwInput').value += ' ' + dartThrow;
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        dartCount++;
+                    }
+
+                    // Final dart: Must be a double to finish
+                    if (remaining > 0 && dartCount < 3) {
+                        const { throw: dartThrow, value } = generateDartThrow(remaining);
+                        dartThrows.push(dartThrow);
+                        total += value;
+                        remaining -= value;
+                        document.getElementById('throwInput').value += ' ' + dartThrow;
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        dartCount++;
                     }
                 }
-                document.getElementById('throwInput').value = dartThrows.join(' ');
+            } else {
+                // Non-final turn: Generate random darts
+                while (dartCount < 3 && total < 180) {
+                    const { throw: dartThrow, value } = generateDartThrow();
+                    dartThrows.push(dartThrow);
+                    total += value;
+                    document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    dartCount++;
+                }
             }
+
             correctTotal = total;
             isTurnReady = true;
             console.log('Turn generated:', { dartThrows, correctTotal, isTurnReady });
