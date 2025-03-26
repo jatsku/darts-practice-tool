@@ -88,6 +88,53 @@
         .leaderboard table {
             width: 40%;
         }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: black;
+        }
+        .modal-content input[type="text"] {
+            padding: 5px;
+            margin: 10px 0;
+            width: 80%;
+        }
+        .modal-content button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -145,6 +192,17 @@
         </table>
     </div>
 
+    <!-- Modal for Congratulations and Leaderboard Name -->
+    <div id="gameEndModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModalAndRestart()">×</span>
+            <h2>Congratulations!</h2>
+            <p id="congratsMessage"></p>
+            <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard">
+            <button onclick="submitLeaderboardEntry()">Submit</button>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script type="module">
         // Import Firebase modules
@@ -177,6 +235,7 @@
         let isTurnReady = false;
         let totalThrowsSum = 0;
         let gameFinished = false;
+        let currentTimerValue = 0;
 
         // Function to fetch leaderboard from Firestore
         async function fetchLeaderboard() {
@@ -206,22 +265,35 @@
             });
         }
 
-        // Function to add a new time to the leaderboard
-        async function addToLeaderboard(time) {
-            let playerName = prompt("Congratulations! Enter your name for the leaderboard:");
-            if (!playerName || playerName.trim() === '') {
-                playerName = "Anonymous";
-            } else {
-                playerName = playerName.trim();
-            }
+        // Function to show the game end modal
+        function showGameEndModal(message) {
+            const modal = document.getElementById('gameEndModal');
+            const congratsMessage = document.getElementById('congratsMessage');
+            congratsMessage.textContent = message;
+            modal.style.display = 'block';
+        }
+
+        // Function to close the modal and restart the game
+        function closeModalAndRestart() {
+            const modal = document.getElementById('gameEndModal');
+            modal.style.display = 'none';
+            document.getElementById('playerNameInput').value = '';
+            restartGame();
+        }
+
+        // Function to submit leaderboard entry
+        async function submitLeaderboardEntry() {
+            const playerNameInput = document.getElementById('playerNameInput').value;
+            let playerName = playerNameInput.trim() === '' ? 'Anonymous' : playerNameInput.trim();
 
             try {
                 await addDoc(collection(db, 'leaderboard'), {
                     name: playerName,
-                    time: time,
+                    time: currentTimerValue,
                     timestamp: serverTimestamp()
                 });
                 await updateLeaderboardDisplay();
+                closeModalAndRestart();
             } catch (error) {
                 console.error('Error adding to leaderboard:', error);
             }
@@ -356,6 +428,14 @@
                     return;
                 }
 
+                // Check for bust (remaining score cannot go below 0)
+                if (reqInput < 0) {
+                    console.log('Bust detected');
+                    errorMessage.textContent = `Bust! Your throw total (${throwTotalInput}) exceeds the remaining score (${currentScore}). Try again...`;
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
                 totalThrowsSum += throwTotalInput;
                 const expectedTotalThrows = 501 - reqInput;
                 console.log('Checking consistency:', { expectedTotalThrows, totalThrowsSum });
@@ -386,8 +466,8 @@
 
                 console.log('Checking for game end:', { currentScore, hasDouble: dartThrows.some(d => d.startsWith('D')) });
                 if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
-                    await addToLeaderboard(timerValue);
-                    alert(`This page says\nCongratulations! You finished with a double in ${throwsCount} throws and ${turns} turns!\nTime: **${timerValue} sec**`);
+                    currentTimerValue = timerValue;
+                    showGameEndModal(`You finished with a double in ${throwsCount} throws and ${turns} turns! Time: ${timerValue} sec`);
                     gameFinished = true;
                 } else if (currentScore === 0 && !dartThrows.some(d => d.startsWith('D'))) {
                     errorMessage.textContent = 'To finish, the last turn must include a double! Try again...';
@@ -477,6 +557,10 @@
             setInterval(updateTimer, 1000);
             generateTurn();
         });
+
+        // Expose closeModalAndRestart and submitLeaderboardEntry to the global scope for HTML onclick
+        window.closeModalAndRestart = closeModalAndRestart;
+        window.submitLeaderboardEntry = submitLeaderboardEntry;
     </script>
 </body>
 </html>
