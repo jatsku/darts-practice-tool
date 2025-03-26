@@ -310,6 +310,7 @@
             }
             correctTotal = total;
             isTurnReady = true;
+            console.log('Turn generated:', { dartThrows, correctTotal, isTurnReady });
         }
 
         // Update the timer
@@ -320,24 +321,30 @@
 
         // Handle adding a score
         async function addScore() {
+            console.log('addScore called');
             try {
                 const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
                 const reqInput = parseInt(document.getElementById('reqInput').value);
                 const errorMessage = document.getElementById('errorMessage');
                 const timerValue = parseInt(document.getElementById('timer').textContent);
 
+                console.log('Inputs:', { throwTotalInput, reqInput, timerValue });
+
                 if (!isTurnReady) {
+                    console.log('Turn not ready');
                     errorMessage.textContent = 'Please wait for the turn to complete!';
                     errorMessage.style.display = 'block';
                     return;
                 }
 
                 if (isNaN(throwTotalInput) || isNaN(reqInput)) {
+                    console.log('Invalid inputs');
                     errorMessage.textContent = 'Please enter valid numbers for both fields!';
                     errorMessage.style.display = 'block';
                     return;
                 }
 
+                console.log('Checking throw total:', { throwTotalInput, correctTotal });
                 if (throwTotalInput !== correctTotal) {
                     errorMessage.textContent = `Incorrect Throw total! The correct total for ${dartThrows.join(' ')} is ${correctTotal}. Try again...`;
                     errorMessage.style.display = 'block';
@@ -345,6 +352,7 @@
                 }
 
                 const expectedReq = currentScore - throwTotalInput;
+                console.log('Checking req:', { reqInput, expectedReq });
                 if (reqInput !== expectedReq) {
                     errorMessage.textContent = `Incorrect Req! After throwing ${throwTotalInput}, the remaining score should be ${expectedReq}. Try again...`;
                     errorMessage.style.display = 'block';
@@ -353,6 +361,7 @@
 
                 totalThrowsSum += throwTotalInput;
                 const expectedTotalThrows = 501 - reqInput;
+                console.log('Checking consistency:', { expectedTotalThrows, totalThrowsSum });
                 if (Math.abs(expectedTotalThrows - totalThrowsSum) > 1) {
                     errorMessage.textContent = `Inconsistent scoring! Expected total throws (${expectedTotalThrows}) does not match cumulative sum (${totalThrowsSum}). Consider restarting.`;
                     errorMessage.style.display = 'block';
@@ -364,6 +373,7 @@
                 throwsCount += 3;
                 turns++;
 
+                console.log('Updating table and stats:', { currentScore, throwsCount, turns });
                 const row = document.createElement('tr');
                 row.innerHTML = `<td>${throwTotalInput}</td><td>${currentScore}</td>`;
                 document.getElementById('scoreTable').appendChild(row);
@@ -377,6 +387,7 @@
                 document.getElementById('lastThrow').textContent = throwTime.toFixed(2);
                 document.getElementById('avgTime').textContent = (totalThrowTime / turns).toFixed(2);
 
+                console.log('Checking for game end:', { currentScore, hasDouble: dartThrows.some(d => d.startsWith('D')) });
                 if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
                     await addToLeaderboard(timerValue);
                     alert(`This page says\nCongratulations! You finished with a double in ${throwsCount} throws and ${turns} turns!\nTime: **${timerValue} sec**`);
@@ -393,6 +404,7 @@
                 }
 
                 if (!gameFinished) {
+                    console.log('Generating next turn');
                     generateTurn();
                 }
                 document.getElementById('throwTotalInput').value = '';
@@ -407,6 +419,7 @@
 
         // Restart the game
         function restartGame() {
+            console.log('restartGame called');
             try {
                 currentScore = 501;
                 throwsCount = 0;
@@ -435,8 +448,26 @@
         }
 
         // Attach event listeners
-        document.getElementById('addScoreBtn').addEventListener('click', addScore);
-        document.getElementById('restartBtn').addEventListener('click', restartGame);
+        const addScoreBtn = document.getElementById('addScoreBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        if (addScoreBtn) {
+            addScoreBtn.addEventListener('click', () => {
+                console.log('Add Score button clicked');
+                addScore();
+            });
+        } else {
+            console.error('Add Score button not found');
+        }
+
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+                console.log('Restart button clicked');
+                restartGame();
+            });
+        } else {
+            console.error('Restart button not found');
+        }
 
         // Start the timer and initial turn
         setInterval(updateTimer, 1000);
