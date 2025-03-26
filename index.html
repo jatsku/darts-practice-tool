@@ -5,90 +5,196 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Darts Practice Tool</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        table {
-            margin: 20px auto;
-            border-collapse: collapse;
-            width: 50%;
-            background-color: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            font-size: 1.2em;
-        }
-        th {
             background-color: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        /* Starting Score Section */
+        .start-score {
+            background-color: #e0f7e0;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .start-score p {
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Timer Section */
+        .timer {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .timer span {
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Input Section */
+        .input-section {
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .input-section label {
+            display: block;
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        .input-section input[type="text"],
+        .input-section input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .input-section input[type="text"]:focus,
+        .input-section input[type="number"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+
+        .input-section input[readonly] {
+            background-color: #f9f9f9;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+            margin: 0 5px;
+            transition: background-color 0.3s;
+        }
+
+        #addScoreBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #addScoreBtn:hover {
+            background-color: #45a049;
+        }
+
+        #restartBtn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        #restartBtn:hover {
+            background-color: #1e88e5;
+        }
+
+        /* Error Message */
         .error {
             background-color: #ffe6e6;
             color: #d32f2f;
             padding: 10px;
             margin: 10px auto;
-            width: 50%;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 5px;
             display: none;
-            border-radius: 5px;
         }
-        .timer {
-            font-size: 1.2em;
-            margin: 10px;
-        }
-        .input-section {
-            margin: 20px 0;
-        }
-        input[type="number"] {
-            padding: 5px;
-            font-size: 1em;
-            width: 100px;
-            margin: 0 10px;
-        }
-        input[type="text"] {
-            padding: 5px;
-            font-size: 1em;
-            width: 150px;
-            margin: 0 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .restart-btn {
-            background-color: #555;
-        }
-        .restart-btn:hover {
-            background-color: #444;
-        }
+
+        /* Stats Section */
         .stats {
-            margin-top: 20px;
-            font-size: 0.9em;
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
+            font-size: 16px;
             color: #666;
         }
+
+        .stats p {
+            margin-bottom: 8px;
+        }
+
+        .stats span {
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Leaderboard Section */
         .leaderboard {
-            margin-top: 30px;
+            width: 90%;
+            max-width: 400px;
+            margin: 20px auto;
         }
+
         .leaderboard table {
-            width: 60%; /* Increased width to accommodate the new Date column */
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        /* Modal styles */
+
+        .leaderboard th,
+        .leaderboard td {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .leaderboard th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -99,16 +205,18 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
         }
+
         .modal-content {
             background-color: white;
-            margin: 15% auto;
+            margin: 20% auto;
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
-            max-width: 500px;
+            max-width: 400px;
             border-radius: 5px;
             text-align: center;
         }
+
         .close-btn {
             color: #aaa;
             float: right;
@@ -116,91 +224,120 @@
             font-weight: bold;
             cursor: pointer;
         }
+
         .close-btn:hover {
             color: black;
         }
+
         .modal-content input[type="text"] {
-            padding: 5px;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             margin: 10px 0;
-            width: 80%;
         }
+
         .modal-content button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            width: 100%;
         }
+
         .modal-content button:hover {
             background-color: #45a049;
         }
+
         .modal-content button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
+
         .modal-error {
             color: #d32f2f;
-            font-size: 0.9em;
+            font-size: 14px;
             margin-top: 10px;
             display: none;
+        }
+
+        /* Toggle for Leaderboard */
+        .toggle-leaderboard {
+            font-size: 16px;
+            color: #2196F3;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .toggle-leaderboard:hover {
+            text-decoration: underline;
+        }
+
+        /* Hide leaderboard by default on mobile */
+        .leaderboard {
+            display: none;
+        }
+
+        .leaderboard.visible {
+            display: block;
         }
     </style>
 </head>
 <body>
     <h1>Darts Practice Tool</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Throw</th>
-                <th>Req</th>
-            </tr>
-        </thead>
-        <tbody id="scoreTable">
-            <tr>
-                <td colspan="2">Start at 501</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="start-score">
+        <p>Start at 501</p>
+    </div>
 
     <div id="errorMessage" class="error">
         You made an error! Try again...
     </div>
 
     <div class="timer">
-        Play throws: <span id="throws">0</span> | <span id="timer">0</span> sec
+        Throws: <span id="throws">0</span> | Time: <span id="timer">0</span> sec
     </div>
 
     <div class="input-section">
-        <label>Throw: <input type="text" id="throwInput" readonly value=""></label>
-        <label>Throw Total: <input type="number" id="throwTotalInput" placeholder="Enter total"></label>
-        <label>Req: <input type="number" id="reqInput" placeholder="Enter remaining"></label>
+        <label>Throw:</label>
+        <input type="text" id="throwInput" readonly value="">
+        <label>Total Score:</label>
+        <input type="number" id="throwTotalInput" placeholder="e.g., 60">
+        <label>Remaining Score:</label>
+        <input type="number" id="reqInput" placeholder="e.g., 441">
     </div>
 
-    <button id="addScoreBtn">Add Score</button>
-    <button id="restartBtn" class="restart-btn">Restart</button>
+    <div class="button-group">
+        <button id="addScoreBtn">Add Score</button>
+        <button id="restartBtn">Restart</button>
+    </div>
 
     <div class="stats">
-        <p>You made <span id="turns">0</span> turn(s).</p>
-        <p>Last Throw: <span id="lastThrow">0</span> sec.</p>
-        <p>Average counting time: <span id="avgTime">0</span> sec.</p>
+        <p>Turns: <span id="turns">0</span></p>
+        <p>Last Throw: <span id="lastThrow">0</span> sec</p>
+        <p>Average Time: <span id="avgTime">0</span> sec</p>
     </div>
 
-    <div class="leaderboard">
-        <h2>Top 10 Fastest Times</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>Player</th>
-                    <th>Time (sec)</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody id="leaderboardTable">
-            </tbody>
-        </table>
+    <div class="leaderboard-section">
+        <div class="toggle-leaderboard" onclick="toggleLeaderboard()">Show Top 10 Fastest Times</div>
+        <div class="leaderboard" id="leaderboardSection">
+            <h2>Top 10 Fastest Times</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Time (sec)</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardTable">
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Modal for Congratulations and Leaderboard Name -->
@@ -215,7 +352,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK and JavaScript -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -253,7 +390,7 @@
         function formatDateTime() {
             const now = new Date();
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -281,7 +418,7 @@
         async function updateLeaderboardDisplay() {
             const leaderboard = await fetchLeaderboard();
             const leaderboardTable = document.getElementById('leaderboardTable');
-            leaderboardTable.innerHTML = ''; // Clear existing rows
+            leaderboardTable.innerHTML = '';
             leaderboard.forEach((entry, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `<td>${index + 1}</td><td>${entry.name}</td><td>${entry.time}</td><td>${entry.date}</td>`;
@@ -314,14 +451,7 @@
             const submitBtn = document.getElementById('submitLeaderboardBtn');
             let playerName = playerNameInput.trim() === '' ? 'Anonymous' : playerNameInput.trim();
 
-            // Get the current date and time
             const recordDate = formatDateTime();
-
-            // Log the data being sent
-            console.log('Submitting leaderboard entry:', { name: playerName, time: currentTimerValue, date: recordDate, timestamp: serverTimestamp() });
-            console.log('Type of currentTimerValue:', typeof currentTimerValue, 'Value:', currentTimerValue);
-
-            // Disable the button and show a loading state
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
 
@@ -349,23 +479,33 @@
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Submit';
                     } else {
-                        // Wait 1 second before retrying
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
             }
         }
 
-        // Generate a single dart throw (e.g., S20, D15, T19)
+        // Function to toggle leaderboard visibility
+        function toggleLeaderboard() {
+            const leaderboardSection = document.getElementById('leaderboardSection');
+            const toggleText = document.querySelector('.toggle-leaderboard');
+            if (leaderboardSection.classList.contains('visible')) {
+                leaderboardSection.classList.remove('visible');
+                toggleText.textContent = 'Show Top 10 Fastest Times';
+            } else {
+                leaderboardSection.classList.add('visible');
+                toggleText.textContent = 'Hide Top 10 Fastest Times';
+            }
+        }
+
+        // Generate a single dart throw
         function generateDartThrow(targetScore = null) {
             const sections = Array.from({length: 20}, (_, i) => i + 1).concat([25]);
             let typeThrow, section, value;
 
             if (targetScore !== null && targetScore > 0) {
-                // Handle specific target scores for finishing
                 if (targetScore >= 40 && targetScore <= 60) {
-                    // Use a triple or single to get to a double
-                    const doubleValue = Math.floor((targetScore - 20) / 2); // Aim to leave a double
+                    const doubleValue = Math.floor((targetScore - 20) / 2);
                     if (doubleValue >= 1 && doubleValue <= 20) {
                         section = targetScore - doubleValue * 2;
                         typeThrow = section <= 20 ? 'S' : 'T';
@@ -374,13 +514,11 @@
                         return { throw: `${typeThrow}${section}`, value };
                     }
                 } else if (targetScore >= 2 && targetScore <= 40) {
-                    // Finish with a double
                     section = Math.floor(targetScore / 2);
                     typeThrow = 'D';
                     value = section * 2;
                     return { throw: `${typeThrow}${section}`, value };
                 } else if (targetScore === 50) {
-                    // Bullseye to finish
                     section = 25;
                     typeThrow = 'D';
                     value = 50;
@@ -388,7 +526,6 @@
                 }
             }
 
-            // Default random throw if no specific target
             section = sections[Math.floor(Math.random() * sections.length)];
             typeThrow = section === 25 ? (Math.random() < 0.5 ? 'S' : 'D') : ['S', 'D', 'T'][Math.floor(Math.random() * 3)];
             value = typeThrow === 'S' ? section : typeThrow === 'D' ? section * 2 : section * 3;
@@ -402,12 +539,11 @@
             let total = 0;
             isTurnReady = false;
             document.getElementById('throwInput').value = '';
-            let isFinalTurn = currentScore <= 170; // 170 is the highest possible checkout with 3 darts (T20 T20 D25)
+            let isFinalTurn = currentScore <= 170;
             let targetScore = isFinalTurn ? currentScore : null;
             let dartCount = 0;
 
             if (isFinalTurn) {
-                // Generate darts to exactly match the target score, ending with a double
                 let remaining = targetScore;
                 while (dartCount < 3 && remaining > 0) {
                     const { throw: dartThrow, value } = generateDartThrow(remaining);
@@ -419,16 +555,14 @@
                     dartCount++;
                 }
 
-                // If we overshot or undershot, adjust the darts
                 if (remaining !== 0) {
                     dartThrows = [];
                     total = 0;
                     remaining = targetScore;
                     dartCount = 0;
 
-                    // First dart: Try to get close to a double
                     if (remaining > 40) {
-                        const firstScore = Math.min(remaining - 32, 60); // Aim to leave a double (e.g., D16 = 32)
+                        const firstScore = Math.min(remaining - 32, 60);
                         const { throw: dartThrow, value } = generateDartThrow(firstScore);
                         dartThrows.push(dartThrow);
                         total += value;
@@ -438,7 +572,6 @@
                         dartCount++;
                     }
 
-                    // Second dart: Get closer if needed
                     if (remaining > 40 && dartCount < 3) {
                         const secondScore = Math.min(remaining - 32, 60);
                         const { throw: dartThrow, value } = generateDartThrow(secondScore);
@@ -450,7 +583,6 @@
                         dartCount++;
                     }
 
-                    // Final dart: Must be a double to finish
                     if (remaining > 0 && dartCount < 3) {
                         const { throw: dartThrow, value } = generateDartThrow(remaining);
                         dartThrows.push(dartThrow);
@@ -462,7 +594,6 @@
                     }
                 }
             } else {
-                // Non-final turn: Generate random darts
                 while (dartCount < 3 && total < 180) {
                     const { throw: dartThrow, value } = generateDartThrow();
                     dartThrows.push(dartThrow);
@@ -493,23 +624,18 @@
                 const errorMessage = document.getElementById('errorMessage');
                 const timerValue = parseInt(document.getElementById('timer').textContent);
 
-                console.log('Inputs:', { throwTotalInput, reqInput, timerValue });
-
                 if (!isTurnReady) {
-                    console.log('Turn not ready');
                     errorMessage.textContent = 'Please wait for the turn to complete!';
                     errorMessage.style.display = 'block';
                     return;
                 }
 
                 if (isNaN(throwTotalInput) || isNaN(reqInput)) {
-                    console.log('Invalid inputs');
                     errorMessage.textContent = 'Please enter valid numbers for both fields!';
                     errorMessage.style.display = 'block';
                     return;
                 }
 
-                console.log('Checking throw total:', { throwTotalInput, correctTotal });
                 if (throwTotalInput !== correctTotal) {
                     errorMessage.textContent = `Incorrect Throw total! The correct total for ${dartThrows.join(' ')} is ${correctTotal}. Try again...`;
                     errorMessage.style.display = 'block';
@@ -517,16 +643,13 @@
                 }
 
                 const expectedReq = currentScore - throwTotalInput;
-                console.log('Checking req:', { reqInput, expectedReq });
                 if (reqInput !== expectedReq) {
                     errorMessage.textContent = `Incorrect Req! After throwing ${throwTotalInput}, the remaining score should be ${expectedReq}. Try again...`;
                     errorMessage.style.display = 'block';
                     return;
                 }
 
-                // Check for bust (remaining score cannot go below 0)
                 if (reqInput < 0) {
-                    console.log('Bust detected');
                     errorMessage.textContent = `Bust! Your throw total (${throwTotalInput}) exceeds the remaining score (${currentScore}). Try again...`;
                     errorMessage.style.display = 'block';
                     return;
@@ -534,7 +657,6 @@
 
                 totalThrowsSum += throwTotalInput;
                 const expectedTotalThrows = 501 - reqInput;
-                console.log('Checking consistency:', { expectedTotalThrows, totalThrowsSum });
                 if (Math.abs(expectedTotalThrows - totalThrowsSum) > 1) {
                     errorMessage.textContent = `Inconsistent scoring! Expected total throws (${expectedTotalThrows}) does not match cumulative sum (${totalThrowsSum}). Consider restarting.`;
                     errorMessage.style.display = 'block';
@@ -546,11 +668,6 @@
                 throwsCount += 3;
                 turns++;
 
-                console.log('Updating table and stats:', { currentScore, throwsCount, turns });
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${throwTotalInput}</td><td>${currentScore}</td>`;
-                document.getElementById('scoreTable').appendChild(row);
-
                 document.getElementById('throws').textContent = throwsCount;
                 document.getElementById('turns').textContent = turns;
 
@@ -560,7 +677,6 @@
                 document.getElementById('lastThrow').textContent = throwTime.toFixed(2);
                 document.getElementById('avgTime').textContent = (totalThrowTime / turns).toFixed(2);
 
-                console.log('Checking for game end:', { currentScore, hasDouble: dartThrows.some(d => d.startsWith('D')) });
                 if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
                     currentTimerValue = timerValue;
                     showGameEndModal(timerValue);
@@ -572,12 +688,10 @@
                     totalThrowsSum -= throwTotalInput;
                     throwsCount -= 3;
                     turns--;
-                    document.getElementById('scoreTable').deleteRow(document.getElementById('scoreTable').rows.length - 1);
                     generateTurn();
                 }
 
                 if (!gameFinished) {
-                    console.log('Generating next turn');
                     generateTurn();
                 }
                 document.getElementById('throwTotalInput').value = '';
@@ -602,7 +716,6 @@
                 totalThrowTime = 0;
                 totalThrowsSum = 0;
                 gameFinished = false;
-                document.getElementById('scoreTable').innerHTML = '<tr><td colspan="2">Start at 501</td></tr>';
                 document.getElementById('throws').textContent = '0';
                 document.getElementById('turns').textContent = '0';
                 document.getElementById('lastThrow').textContent = '0';
@@ -628,9 +741,7 @@
             const submitLeaderboardBtn = document.getElementById('submitLeaderboardBtn');
 
             if (addScoreBtn) {
-                console.log('Add Score button found');
                 addScoreBtn.addEventListener('click', () => {
-                    console.log('Add Score button clicked');
                     addScore();
                 });
             } else {
@@ -638,9 +749,7 @@
             }
 
             if (restartBtn) {
-                console.log('Restart button found');
                 restartBtn.addEventListener('click', () => {
-                    console.log('Restart button clicked');
                     restartGame();
                 });
             } else {
@@ -648,25 +757,20 @@
             }
 
             if (submitLeaderboardBtn) {
-                console.log('Submit Leaderboard button found');
                 submitLeaderboardBtn.addEventListener('click', () => {
-                    console.log('Submit Leaderboard button clicked');
                     submitLeaderboardEntry();
                 });
             } else {
                 console.error('Submit Leaderboard button not found');
             }
 
-            // Initialize leaderboard display on page load
             updateLeaderboardDisplay();
-
-            // Start the timer and initial turn
             setInterval(updateTimer, 1000);
             generateTurn();
         });
 
-        // Expose closeModalAndRestart to the global scope for HTML onclick
         window.closeModalAndRestart = closeModalAndRestart;
+        window.toggleLeaderboard = toggleLeaderboard;
     </script>
 </body>
 </html>
