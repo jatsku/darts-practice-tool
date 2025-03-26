@@ -51,11 +51,12 @@
 
         /* Dark Mode Toggle Switch */
         .dark-mode-toggle {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
             display: flex;
             align-items: center;
+            z-index: 1000;
         }
 
         .dark-mode-toggle label {
@@ -113,6 +114,29 @@
             transform: translateX(26px);
         }
 
+        /* Help Icon */
+        .help-icon {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        body.dark-mode .help-icon {
+            color: #ccc;
+        }
+
+        .help-icon:hover {
+            color: #333;
+        }
+
+        body.dark-mode .help-icon:hover {
+            color: #fff;
+        }
+
         /* Starting Score Section */
         .start-score {
             background-color: #e0f7e0;
@@ -139,11 +163,32 @@
             color: #fff;
         }
 
+        /* Progress Bar */
+        .progress-bar {
+            width: 90%;
+            max-width: 400px;
+            height: 10px;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin: 10px auto;
+            overflow: hidden;
+        }
+
+        body.dark-mode .progress-bar {
+            background-color: #555;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s;
+        }
+
         /* Timer Section */
         .timer {
             font-size: 18px;
             color: #666;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
 
         body.dark-mode .timer {
@@ -163,7 +208,7 @@
         .input-section {
             width: 90%;
             max-width: 400px;
-            margin: 0 auto 20px;
+            margin: 20px auto;
         }
 
         .input-section label {
@@ -218,7 +263,7 @@
             justify-content: space-between;
             width: 90%;
             max-width: 400px;
-            margin: 0 auto 20px;
+            margin: 20px auto;
         }
 
         button {
@@ -282,7 +327,7 @@
         }
 
         .stats p {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .stats span {
@@ -440,7 +485,7 @@
             font-size: 16px;
             color: #2196F3;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin: 20px 0;
         }
 
         body.dark-mode .toggle-leaderboard {
@@ -471,10 +516,17 @@
         </label>
     </div>
 
+    <!-- Help Icon -->
+    <div class="help-icon" onclick="showHelpModal()">?</div>
+
     <h1>Darts Practice Tool</h1>
 
     <div class="start-score">
         <p>Start at 501</p>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
     </div>
 
     <div id="errorMessage" class="error">
@@ -502,7 +554,7 @@
     <div class="stats">
         <p>Turns: <span id="turns">0</span></p>
         <p>Last Throw: <span id="lastThrow">0</span> sec</p>
-        <p>Average Time: <span id="avgTime">0</span> sec</p>
+        <p>Average Throw Time: <span id="avgTime">0</span> sec</p>
     </div>
 
     <div class="leaderboard-section">
@@ -533,6 +585,19 @@
             <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard">
             <button id="submitLeaderboardBtn">Submit</button>
             <p id="modalError" class="modal-error">Failed to save your score. Please try again.</p>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeHelpModal()">×</span>
+            <h2>How to Use</h2>
+            <p>1. Each turn, you'll see a throw (e.g., T18 T17 T2).</p>
+            <p>2. Calculate the total score for the throw and enter it in "Total Score".</p>
+            <p>3. Subtract the total from your current score (start at 501) and enter the remainder in "Remaining Score".</p>
+            <p>4. Press "Add Score" to continue. To win, you must reach exactly 0 with a double.</p>
+            <p>5. Use "Restart" to start over.</p>
         </div>
     </div>
 
@@ -570,6 +635,12 @@
         let gameFinished = false;
         let currentTimerValue = 0;
 
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = ((501 - currentScore) / 501) * 100;
+            document.getElementById('progressBarFill').style.width = `${progress}%`;
+        }
+
         // Dark Mode Functionality
         const darkModeSwitch = document.getElementById('darkModeSwitch');
         
@@ -589,6 +660,15 @@
                 localStorage.setItem('darkMode', 'disabled');
             }
         });
+
+        // Help Modal Functions
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'block';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
 
         // Function to format the current date and time as a string
         function formatDateTime() {
@@ -881,6 +961,8 @@
                 document.getElementById('lastThrow').textContent = throwTime.toFixed(2);
                 document.getElementById('avgTime').textContent = (totalThrowTime / turns).toFixed(2);
 
+                updateProgressBar();
+
                 if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
                     currentTimerValue = timerValue;
                     showGameEndModal(timerValue);
@@ -928,6 +1010,7 @@
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('throwTotalInput').value = '';
                 document.getElementById('reqInput').value = '';
+                updateProgressBar();
                 generateTurn();
             } catch (error) {
                 console.error('Error in restartGame:', error);
@@ -971,10 +1054,13 @@
             updateLeaderboardDisplay();
             setInterval(updateTimer, 1000);
             generateTurn();
+            updateProgressBar();
         });
 
         window.closeModalAndRestart = closeModalAndRestart;
         window.toggleLeaderboard = toggleLeaderboard;
+        window.showHelpModal = showHelpModal;
+        window.closeHelpModal = closeHelpModal;
     </script>
 </body>
 </html>
