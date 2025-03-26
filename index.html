@@ -209,7 +209,7 @@
             <h2>Congratulations!</h2>
             <p id="congratsMessage"></p>
             <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard">
-            <button id="submitLeaderboardBtn" onclick="submitLeaderboardEntry()">Submit</button>
+            <button id="submitLeaderboardBtn">Submit</button>
             <p id="modalError" class="modal-error">Failed to save your score. Please try again.</p>
         </div>
     </div>
@@ -303,6 +303,7 @@
 
             // Log the data being sent
             console.log('Submitting leaderboard entry:', { name: playerName, time: currentTimerValue, timestamp: serverTimestamp() });
+            console.log('Type of currentTimerValue:', typeof currentTimerValue, 'Value:', currentTimerValue);
 
             // Disable the button and show a loading state
             submitBtn.disabled = true;
@@ -607,6 +608,7 @@
             console.log('DOM fully loaded');
             const addScoreBtn = document.getElementById('addScoreBtn');
             const restartBtn = document.getElementById('restartBtn');
+            const submitLeaderboardBtn = document.getElementById('submitLeaderboardBtn');
 
             if (addScoreBtn) {
                 console.log('Add Score button found');
@@ -628,6 +630,16 @@
                 console.error('Restart button not found');
             }
 
+            if (submitLeaderboardBtn) {
+                console.log('Submit Leaderboard button found');
+                submitLeaderboardBtn.addEventListener('click', () => {
+                    console.log('Submit Leaderboard button clicked');
+                    submitLeaderboardEntry();
+                });
+            } else {
+                console.error('Submit Leaderboard button not found');
+            }
+
             // Initialize leaderboard display on page load
             updateLeaderboardDisplay();
 
@@ -636,9 +648,8 @@
             generateTurn();
         });
 
-        // Expose closeModalAndRestart and submitLeaderboardEntry to the global scope for HTML onclick
+        // Expose closeModalAndRestart to the global scope for HTML onclick
         window.closeModalAndRestart = closeModalAndRestart;
-        window.submitLeaderboardEntry = submitLeaderboardEntry;
     </script>
 </body>
 </html>
