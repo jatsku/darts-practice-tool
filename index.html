@@ -318,7 +318,6 @@
 
         // Handle adding a score
         async function addScore() {
-            alert('Add Score button clicked!');
             console.log('addScore called');
             try {
                 const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
@@ -417,7 +416,6 @@
 
         // Restart the game
         function restartGame() {
-            alert('Restart button clicked!');
             console.log('restartGame called');
             try {
                 currentScore = 501;
@@ -455,7 +453,6 @@
             if (addScoreBtn) {
                 console.log('Add Score button found');
                 addScoreBtn.addEventListener('click', () => {
-                    alert('Add Score button clicked!');
                     console.log('Add Score button clicked');
                     addScore();
                 });
@@ -466,7 +463,6 @@
             if (restartBtn) {
                 console.log('Restart button found');
                 restartBtn.addEventListener('click', () => {
-                    alert('Restart button clicked!');
                     console.log('Restart button clicked');
                     restartGame();
                 });
