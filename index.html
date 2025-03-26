@@ -145,23 +145,27 @@
         </table>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <!-- Firebase SDK (Updated to latest version) -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    <script>
+        // Firebase configuration (from your provided image)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3CqF5hCNd035M0xMA7NldG7K2-05sHs",
+            authDomain: "dartspracticetool.firebaseapp.com",
+            projectId: "dartspracticetool",
+            storageBucket: "dartspracticetool.firebaseapp.com",
+            messagingSenderId: "95123684715",
+            appId: "1:95123684715:web:fcdb274b5625ec6e9ea82e"
+        };
+
         // Initialize Firebase
-       const firebaseConfig = {
-  apiKey: "AIzaSyB3CqF5hCNd035M9xMA7nldG07K2-05sHs",
-  authDomain: "dartspracticetool.firebaseapp.com",
-  projectId: "dartspracticetool",
-  storageBucket: "dartspracticetool.firebasestorage.app",
-  messagingSenderId: "95123684715",
-  appId: "1:95123684715:web:fc0b274b5625ec6e9ea02e"
-};
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
+        // Game state
         let currentScore = 501;
         let throwsCount = 0;
         let turns = 0;
@@ -176,15 +180,18 @@
 
         // Function to fetch leaderboard from Firestore
         async function fetchLeaderboard() {
-            const snapshot = await db.collection('leaderboard')
-                .orderBy('time', 'asc')
-                .limit(10)
-                .get();
-            const leaderboard = [];
-            snapshot.forEach(doc => {
-                leaderboard.push(doc.data());
-            });
-            return leaderboard;
+            try {
+                const q = query(collection(db, 'leaderboard'), orderBy('time', 'asc'), limit(10));
+                const snapshot = await getDocs(q);
+                const leaderboard = [];
+                snapshot.forEach(doc => {
+                    leaderboard.push(doc.data());
+                });
+                return leaderboard;
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                return [];
+            }
         }
 
         // Function to update leaderboard display
@@ -201,7 +208,6 @@
 
         // Function to add a new time to the leaderboard
         async function addToLeaderboard(time) {
-            // Prompt for player name
             let playerName = prompt("Congratulations! Enter your name for the leaderboard:");
             if (!playerName || playerName.trim() === '') {
                 playerName = "Anonymous";
@@ -209,15 +215,16 @@
                 playerName = playerName.trim();
             }
 
-            // Add to Firestore
-            await db.collection('leaderboard').add({
-                name: playerName,
-                time: time,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Fetch and update leaderboard (Firestore will handle sorting and limiting)
-            await updateLeaderboardDisplay();
+            try {
+                await addDoc(collection(db, 'leaderboard'), {
+                    name: playerName,
+                    time: time,
+                    timestamp: serverTimestamp()
+                });
+                await updateLeaderboardDisplay();
+            } catch (error) {
+                console.error('Error adding to leaderboard:', error);
+            }
         }
 
         // Initialize leaderboard display on page load
@@ -413,6 +420,7 @@
             generateTurn();
         }
 
+        // Start the timer and initial turn
         setInterval(updateTimer, 1000);
         generateTurn();
     </script>
