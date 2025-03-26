@@ -294,30 +294,47 @@
             restartGame();
         }
 
-        // Function to submit leaderboard entry
+        // Function to submit leaderboard entry with retry mechanism
         async function submitLeaderboardEntry() {
             const playerNameInput = document.getElementById('playerNameInput').value;
             const modalError = document.getElementById('modalError');
             const submitBtn = document.getElementById('submitLeaderboardBtn');
             let playerName = playerNameInput.trim() === '' ? 'Anonymous' : playerNameInput.trim();
 
+            // Log the data being sent
+            console.log('Submitting leaderboard entry:', { name: playerName, time: currentTimerValue, timestamp: serverTimestamp() });
+
             // Disable the button and show a loading state
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
 
-            try {
-                await addDoc(collection(db, 'leaderboard'), {
-                    name: playerName,
-                    time: currentTimerValue,
-                    timestamp: serverTimestamp()
-                });
-                await updateLeaderboardDisplay();
-                closeModalAndRestart();
-            } catch (error) {
-                console.error('Error adding to leaderboard:', error);
-                modalError.style.display = 'block';
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit';
+            const maxRetries = 3;
+            let attempt = 0;
+            let success = false;
+
+            while (attempt < maxRetries && !success) {
+                try {
+                    attempt++;
+                    await addDoc(collection(db, 'leaderboard'), {
+                        name: playerName,
+                        time: currentTimerValue,
+                        timestamp: serverTimestamp()
+                    });
+                    await updateLeaderboardDisplay();
+                    success = true;
+                    closeModalAndRestart();
+                } catch (error) {
+                    console.error(`Attempt ${attempt} failed. Error adding to leaderboard:`, error);
+                    if (attempt === maxRetries) {
+                        modalError.textContent = `Failed to save your score after ${maxRetries} attempts: ${error.message}. Please try again later.`;
+                        modalError.style.display = 'block';
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit';
+                    } else {
+                        // Wait 1 second before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
             }
         }
 
