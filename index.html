@@ -145,7 +145,23 @@
         </table>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
     <script>
+        // Initialize Firebase
+       const firebaseConfig = {
+  apiKey: "AIzaSyB3CqF5hCNd035M9xMA7nldG07K2-05sHs",
+  authDomain: "dartspracticetool.firebaseapp.com",
+  projectId: "dartspracticetool",
+  storageBucket: "dartspracticetool.firebasestorage.app",
+  messagingSenderId: "95123684715",
+  appId: "1:95123684715:web:fc0b274b5625ec6e9ea02e"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let currentScore = 501;
         let throwsCount = 0;
         let turns = 0;
@@ -155,14 +171,25 @@
         let correctTotal = 0;
         let dartThrows = [];
         let isTurnReady = false;
-        let totalThrowsSum = 0; // Cumulative sum of accepted throw totals
-        let gameFinished = false; // Flag to stop generating new turns
+        let totalThrowsSum = 0;
+        let gameFinished = false;
 
-        // Load leaderboard from localStorage
-        let leaderboard = JSON.parse(localStorage.getItem('dartsLeaderboard')) || [];
+        // Function to fetch leaderboard from Firestore
+        async function fetchLeaderboard() {
+            const snapshot = await db.collection('leaderboard')
+                .orderBy('time', 'asc')
+                .limit(10)
+                .get();
+            const leaderboard = [];
+            snapshot.forEach(doc => {
+                leaderboard.push(doc.data());
+            });
+            return leaderboard;
+        }
 
         // Function to update leaderboard display
-        function updateLeaderboardDisplay() {
+        async function updateLeaderboardDisplay() {
+            const leaderboard = await fetchLeaderboard();
             const leaderboardTable = document.getElementById('leaderboardTable');
             leaderboardTable.innerHTML = ''; // Clear existing rows
             leaderboard.forEach((entry, index) => {
@@ -173,25 +200,24 @@
         }
 
         // Function to add a new time to the leaderboard
-        function addToLeaderboard(time) {
+        async function addToLeaderboard(time) {
             // Prompt for player name
             let playerName = prompt("Congratulations! Enter your name for the leaderboard:");
             if (!playerName || playerName.trim() === '') {
-                playerName = "Anonymous"; // Default name if none provided
+                playerName = "Anonymous";
             } else {
-                playerName = playerName.trim(); // Clean up input
+                playerName = playerName.trim();
             }
 
-            leaderboard.push({ name: playerName, time: time });
-            // Sort in ascending order (fastest first)
-            leaderboard.sort((a, b) => a.time - b.time);
-            // Keep only top 10
-            if (leaderboard.length > 10) {
-                leaderboard = leaderboard.slice(0, 10);
-            }
-            // Save to localStorage
-            localStorage.setItem('dartsLeaderboard', JSON.stringify(leaderboard));
-            updateLeaderboardDisplay();
+            // Add to Firestore
+            await db.collection('leaderboard').add({
+                name: playerName,
+                time: time,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Fetch and update leaderboard (Firestore will handle sorting and limiting)
+            await updateLeaderboardDisplay();
         }
 
         // Initialize leaderboard display on page load
@@ -202,10 +228,9 @@
             const sections = Array.from({length: 20}, (_, i) => i + 1).concat([25]);
             let typeThrow, section, value;
             if (targetScore !== null && targetScore > 0 && targetScore <= 40) {
-                // For final turn, ensure the last dart is a double to finish
                 let remaining = targetScore;
                 if (remaining >= 40) {
-                    section = 20; // Max double for simplicity
+                    section = 20;
                     typeThrow = 'D';
                     value = 40;
                 } else if (remaining >= 2) {
@@ -229,12 +254,12 @@
 
         // Generate up to 3 dart throws one by one with 1.5-second interval
         async function generateTurn() {
-            if (gameFinished) return; // Stop generating if game is finished
+            if (gameFinished) return;
             dartThrows = [];
             let total = 0;
             isTurnReady = false;
             document.getElementById('throwInput').value = '';
-            let isFinalTurn = currentScore <= 40; // Consider final turn if score is low
+            let isFinalTurn = currentScore <= 40;
             let targetScore = isFinalTurn ? currentScore : null;
             let dartCount = 0;
 
@@ -245,19 +270,17 @@
                 document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 dartCount++;
-                if (isFinalTurn && total >= targetScore) break; // Stop if total meets or exceeds target
+                if (isFinalTurn && total >= targetScore) break;
             }
-            // Adjust for final turn to exactly match with a double as the last dart
             if (isFinalTurn && total !== currentScore) {
                 let remaining = currentScore - total + (dartThrows[dartCount - 1].startsWith('D') ? parseInt(dartThrows[dartCount - 1].slice(1)) * 2 : dartThrows[dartCount - 1].startsWith('T') ? parseInt(dartThrows[dartCount - 1].slice(1)) * 3 : parseInt(dartThrows[dartCount - 1].slice(1)));
                 if (remaining > 0 && remaining <= 20) {
                     dartThrows[dartCount - 1] = `D${Math.floor(remaining / 2)}`;
-                    total = currentScore; // Force exact match with a double
+                    total = currentScore;
                 } else if (remaining === 25) {
                     dartThrows[dartCount - 1] = 'D25';
                     total = currentScore;
                 } else if (remaining > 0) {
-                    // Adjust previous darts to allow a double finish
                     let adjusted = false;
                     for (let i = dartCount - 2; i >= 0; i--) {
                         let prevValue = dartThrows[i].startsWith('D') ? parseInt(dartThrows[i].slice(1)) * 2 : dartThrows[i].startsWith('T') ? parseInt(dartThrows[i].slice(1)) * 3 : parseInt(dartThrows[i].slice(1));
@@ -289,7 +312,7 @@
         }
 
         // Handle adding a score
-        function addScore() {
+        async function addScore() {
             const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
             const reqInput = parseInt(document.getElementById('reqInput').value);
             const errorMessage = document.getElementById('errorMessage');
@@ -320,10 +343,7 @@
                 return;
             }
 
-            // Update the cumulative sum of throws
             totalThrowsSum += throwTotalInput;
-
-            // Strict consistency check
             const expectedTotalThrows = 501 - reqInput;
             if (Math.abs(expectedTotalThrows - totalThrowsSum) > 1) {
                 errorMessage.textContent = `Inconsistent scoring! Expected total throws (${expectedTotalThrows}) does not match cumulative sum (${totalThrowsSum}). Consider restarting.`;
@@ -338,7 +358,7 @@
 
             const row = document.createElement('tr');
             row.innerHTML = `<td>${throwTotalInput}</td><td>${currentScore}</td>`;
-            document.getElementById('scoreTable').appendChild(row); // Append to bottom
+            document.getElementById('scoreTable').appendChild(row);
 
             document.getElementById('throws').textContent = throwsCount;
             document.getElementById('turns').textContent = turns;
@@ -350,19 +370,18 @@
             document.getElementById('avgTime').textContent = (totalThrowTime / turns).toFixed(2);
 
             if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
-                // Win condition: Exact match with a double
-                addToLeaderboard(timerValue); // Add the finish time and name to leaderboard
+                await addToLeaderboard(timerValue);
                 alert(`This page says\nCongratulations! You finished with a double in ${throwsCount} throws and ${turns} turns!\nTime: **${timerValue} sec**`);
-                gameFinished = true; // Stop generating new turns
+                gameFinished = true;
             } else if (currentScore === 0 && !dartThrows.some(d => d.startsWith('D'))) {
                 errorMessage.textContent = 'To finish, the last turn must include a double! Try again...';
                 errorMessage.style.display = 'block';
-                currentScore = throwTotalInput; // Revert to the score before this turn
+                currentScore = throwTotalInput;
                 totalThrowsSum -= throwTotalInput;
                 throwsCount -= 3;
                 turns--;
                 document.getElementById('scoreTable').deleteRow(document.getElementById('scoreTable').rows.length - 1);
-                generateTurn(); // Repeat the round
+                generateTurn();
             }
 
             if (!gameFinished) {
