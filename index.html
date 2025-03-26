@@ -123,6 +123,30 @@
             transform: translateX(20px);
         }
 
+        /* Buy Me a Coffee Link */
+        .buy-me-a-coffee {
+            position: fixed;
+            top: 40px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
+            text-decoration: none;
+            z-index: 1000;
+            transition: color 0.3s;
+        }
+
+        body.dark-mode .buy-me-a-coffee {
+            color: #ccc;
+        }
+
+        .buy-me-a-coffee:hover {
+            color: #4CAF50;
+        }
+
+        body.dark-mode .buy-me-a-coffee:hover {
+            color: #66b0ff;
+        }
+
         /* Help Icon */
         .help-icon {
             position: fixed;
@@ -146,7 +170,7 @@
             color: #fff;
         }
 
-        /* Current Score Section (Replaces Start at 501 and Progress Bar) */
+        /* Current Score Section */
         .current-score {
             background-color: #e0f7e0;
             padding: 20px;
@@ -510,7 +534,7 @@
             }
 
             .header {
-                padding-top: 50px; /* More space for fixed icons on mobile */
+                padding-top: 60px; /* More space for fixed icons and Buy Me a Coffee link on mobile */
             }
 
             h1 {
@@ -538,6 +562,12 @@
 
             input:checked + .slider:before {
                 transform: translateX(18px);
+            }
+
+            .buy-me-a-coffee {
+                top: 35px;
+                right: 5px;
+                font-size: 10px;
             }
 
             .help-icon {
@@ -623,6 +653,9 @@
             <span class="slider"></span>
         </label>
     </div>
+
+    <!-- Buy Me a Coffee Link -->
+    <a href="https://www.buymeacoffee.com/yourusername" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
 
     <!-- Help Icon -->
     <div class="help-icon" onclick="showHelpModal()">?</div>
