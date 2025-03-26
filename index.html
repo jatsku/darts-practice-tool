@@ -135,6 +135,16 @@
         .modal-content button:hover {
             background-color: #45a049;
         }
+        .modal-content button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .modal-error {
+            color: #d32f2f;
+            font-size: 0.9em;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -199,7 +209,8 @@
             <h2>Congratulations!</h2>
             <p id="congratsMessage"></p>
             <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard">
-            <button onclick="submitLeaderboardEntry()">Submit</button>
+            <button id="submitLeaderboardBtn" onclick="submitLeaderboardEntry()">Submit</button>
+            <p id="modalError" class="modal-error">Failed to save your score. Please try again.</p>
         </div>
     </div>
 
@@ -266,17 +277,19 @@
         }
 
         // Function to show the game end modal
-        function showGameEndModal(message) {
+        function showGameEndModal(timerValue) {
             const modal = document.getElementById('gameEndModal');
             const congratsMessage = document.getElementById('congratsMessage');
-            congratsMessage.textContent = message;
+            congratsMessage.textContent = `Time: ${timerValue} sec`;
             modal.style.display = 'block';
         }
 
         // Function to close the modal and restart the game
         function closeModalAndRestart() {
             const modal = document.getElementById('gameEndModal');
+            const modalError = document.getElementById('modalError');
             modal.style.display = 'none';
+            modalError.style.display = 'none';
             document.getElementById('playerNameInput').value = '';
             restartGame();
         }
@@ -284,7 +297,13 @@
         // Function to submit leaderboard entry
         async function submitLeaderboardEntry() {
             const playerNameInput = document.getElementById('playerNameInput').value;
+            const modalError = document.getElementById('modalError');
+            const submitBtn = document.getElementById('submitLeaderboardBtn');
             let playerName = playerNameInput.trim() === '' ? 'Anonymous' : playerNameInput.trim();
+
+            // Disable the button and show a loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
 
             try {
                 await addDoc(collection(db, 'leaderboard'), {
@@ -296,6 +315,9 @@
                 closeModalAndRestart();
             } catch (error) {
                 console.error('Error adding to leaderboard:', error);
+                modalError.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
             }
         }
 
@@ -506,7 +528,7 @@
                 console.log('Checking for game end:', { currentScore, hasDouble: dartThrows.some(d => d.startsWith('D')) });
                 if (currentScore === 0 && dartThrows.some(d => d.startsWith('D'))) {
                     currentTimerValue = timerValue;
-                    showGameEndModal(`You finished with a double in ${throwsCount} throws and ${turns} turns! Time: ${timerValue} sec`);
+                    showGameEndModal(timerValue);
                     gameFinished = true;
                 } else if (currentScore === 0 && !dartThrows.some(d => d.startsWith('D'))) {
                     errorMessage.textContent = 'To finish, the last turn must include a double! Try again...';
