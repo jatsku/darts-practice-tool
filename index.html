@@ -199,30 +199,6 @@
             color: #66b0ff;
         }
 
-        /* Flip Animation for Score */
-        #currentScoreDisplay {
-            display: inline-block;
-            perspective: 1000px;
-        }
-
-        .flip {
-            animation: flip 0.6s ease-in-out;
-        }
-
-        @keyframes flip {
-            0% {
-                transform: rotateX(0deg);
-            }
-            50% {
-                transform: rotateX(90deg);
-                opacity: 0;
-            }
-            100% {
-                transform: rotateX(0deg);
-                opacity: 1;
-            }
-        }
-
         /* Timer Section */
         .timer {
             font-size: 16px;
@@ -258,7 +234,7 @@
             text-align: left;
         }
 
-        BODY.DARK-MODE .INPUT-SECTION LABEL {
+        body.dark-mode .input-section label {
             color: #ccc;
         }
 
@@ -794,7 +770,7 @@
             <p>1. Each turn, you'll see a throw (e.g., T18 T17 T2).</p>
             <p>2. Calculate the total score for the throw and enter it in "Total Score".</p>
             <p>3. Subtract the total from your current score (starts at 501) and enter the remainder in "Remaining Score".</p>
-            <p>4. Press "Add Score" to continue. To win, you must reach exactly 0 with a double.</p>
+            <p>4. Press "Enter" or "Add Score" to continue. To win, you must reach exactly 0 with a double.</p>
             <p>5. Use "Start/Stop/Restart" to control the game.</p>
         </div>
     </div>
@@ -836,11 +812,34 @@
         let currentTimerValue = 0;
         let timerInterval = null;
 
-        // Update current score display with flip animation
+        // Function to animate the score from old value to new value
+        function animateScore(oldScore, newScore) {
+            const scoreDisplay = document.getElementById('currentScoreDisplay');
+            const duration = 500; // Animation duration in milliseconds
+            const frameRate = 10; // Update every 10ms
+            const totalFrames = duration / frameRate;
+            const difference = newScore - oldScore;
+            const step = difference / totalFrames;
+            let currentFrame = 0;
+            let currentValue = oldScore;
+
+            const animationInterval = setInterval(() => {
+                currentFrame++;
+                currentValue += step;
+                scoreDisplay.textContent = Math.round(currentValue);
+
+                if (currentFrame >= totalFrames) {
+                    clearInterval(animationInterval);
+                    scoreDisplay.textContent = newScore; // Ensure the final value is exact
+                }
+            }, frameRate);
+        }
+
+        // Update current score display with countdown animation
         function updateCurrentScoreDisplay() {
             const scoreDisplay = document.getElementById('currentScoreDisplay');
-            scoreDisplay.textContent = currentScore;
-            scoreDisplay.classList.add('flip'); // Trigger the flip animation
+            const oldScore = parseInt(scoreDisplay.textContent) || 501;
+            animateScore(oldScore, currentScore);
         }
 
         // Dark Mode Functionality
@@ -1409,6 +1408,8 @@
             const addScoreBtn = document.getElementById('addScoreBtn');
             const controlBtn = document.getElementById('controlBtn');
             const submitLeaderboardBtn = document.getElementById('submitLeaderboardBtn');
+            const throwTotalInput = document.getElementById('throwTotalInput');
+            const reqInput = document.getElementById('reqInput');
 
             if (addScoreBtn) {
                 addScoreBtn.addEventListener('click', () => {
@@ -1432,6 +1433,25 @@
                 });
             } else {
                 console.error('Submit Leaderboard button not found');
+            }
+
+            // Ensure Enter key works for both inputs
+            if (throwTotalInput) {
+                throwTotalInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        document.getElementById('reqInput').focus();
+                    }
+                });
+            }
+
+            if (reqInput) {
+                reqInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        addScore();
+                    }
+                });
             }
 
             updateLeaderboardDisplay();
