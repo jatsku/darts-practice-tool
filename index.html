@@ -992,6 +992,100 @@
             return { throw: `${typeThrow}${section}`, value };
         }
 
+        // Generate a finishing shot that exactly matches the target score and ends with a double
+        function generateFinishingShot(targetScore) {
+            const darts = [];
+            let remaining = targetScore;
+            let dartCount = 0;
+
+            // Step 1: Check if the score can be finished directly with a double
+            if (remaining >= 2 && remaining <= 40 && remaining % 2 === 0) {
+                // Direct double finish (e.g., 40 = D20)
+                darts.push({ throw: `D${remaining / 2}`, value: remaining });
+                remaining = 0;
+            } else if (remaining === 50) {
+                // Bullseye finish (D25)
+                darts.push({ throw: 'D25', value: 50 });
+                remaining = 0;
+            } else if (remaining === 1) {
+                // Cannot finish on 1, leave a double (e.g., hit S1 to leave 0, but we need to adjust)
+                darts.push({ throw: 'S1', value: 1 });
+                remaining = 0;
+            } else {
+                // Step 2: Use up to 3 darts to finish exactly, ending with a double
+                while (dartCount < 2 && remaining > 0) {
+                    if (remaining > 100) {
+                        // Use a treble to reduce the score (e.g., T20 = 60)
+                        const value = 60;
+                        darts.push({ throw: 'T20', value });
+                        remaining -= value;
+                    } else if (remaining > 60) {
+                        // Use a treble to leave a double (e.g., 81 -> T19 to leave 24)
+                        const trebleSection = Math.floor((remaining - 2) / 3);
+                        const value = trebleSection * 3;
+                        if (trebleSection >= 1 && trebleSection <= 20) {
+                            darts.push({ throw: `T${trebleSection}`, value });
+                            remaining -= value;
+                        } else {
+                            // Use a single to adjust (e.g., S20)
+                            const singleValue = remaining - 40; // Leave a double like D20
+                            if (singleValue >= 1 && singleValue <= 20) {
+                                darts.push({ throw: `S${singleValue}`, value: singleValue });
+                                remaining -= singleValue;
+                            } else {
+                                darts.push({ throw: 'S20', value: 20 });
+                                remaining -= 20;
+                            }
+                        }
+                    } else if (remaining > 40) {
+                        // Use a single or treble to leave a double (e.g., 50 -> S10 to leave 40)
+                        const singleValue = remaining - 40; // Leave D20
+                        if (singleValue >= 1 && singleValue <= 20) {
+                            darts.push({ throw: `S${singleValue}`, value: singleValue });
+                            remaining -= singleValue;
+                        } else {
+                            darts.push({ throw: 'S20', value: 20 });
+                            remaining -= 20;
+                        }
+                    } else if (remaining > 2 && remaining <= 40 && remaining % 2 === 0) {
+                        // Finish with a double
+                        darts.push({ throw: `D${remaining / 2}`, value: remaining });
+                        remaining = 0;
+                    } else {
+                        // Adjust to leave a double (e.g., 41 -> S1 to leave 40)
+                        const adjustValue = remaining % 2 === 0 ? 2 : 1;
+                        darts.push({ throw: `S${adjustValue}`, value: adjustValue });
+                        remaining -= adjustValue;
+                    }
+                    dartCount++;
+                }
+
+                // Step 3: Use the last dart to finish with a double
+                if (remaining > 0 && dartCount < 3) {
+                    if (remaining === 50) {
+                        darts.push({ throw: 'D25', value: 50 });
+                        remaining = 0;
+                    } else if (remaining >= 2 && remaining <= 40 && remaining % 2 === 0) {
+                        darts.push({ throw: `D${remaining / 2}`, value: remaining });
+                        remaining = 0;
+                    } else {
+                        // If we can't finish, leave a double for the next turn
+                        const adjustValue = remaining - 40; // Try to leave D20
+                        if (adjustValue >= 1 && adjustValue <= 20) {
+                            darts.push({ throw: `S${adjustValue}`, value: adjustValue });
+                            remaining -= adjustValue;
+                        } else {
+                            darts.push({ throw: 'S20', value: 20 });
+                            remaining -= 20;
+                        }
+                    }
+                    dartCount++;
+                }
+            }
+
+            return darts;
+        }
+
         // Generate up to 3 dart throws one by one with 1.5-second interval
         async function generateTurn() {
             if (gameFinished) return;
@@ -1003,19 +1097,19 @@
             let targetScore = isFinalTurn ? currentScore : null;
             let dartCount = 0;
 
-            if (isFinalTurn) {
-                let remaining = targetScore;
-                while (dartCount < 3 && remaining > 0) {
-                    const { throw: dartThrow, value } = generateDartThrow(remaining);
-                    dartThrows.push(dartThrow);
-                    total += value;
-                    remaining -= value;
-                    document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
+            if (isFinalTurn && targetScore > 1) {
+                // Generate a finishing shot that exactly matches the current score
+                const finishingDarts = generateFinishingShot(targetScore);
+                for (const dart of finishingDarts) {
+                    dartThrows.push(dart.throw);
+                    total += dart.value;
+                    document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dart.throw;
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     dartCount++;
                 }
             } else {
-                while (dartCount < 3 && total < 180) {
+                // Generate random throws for non-finishing turns
+                while (dartCount < 3 && total < 180 && total < currentScore) {
                     const { throw: dartThrow, value } = generateDartThrow();
                     dartThrows.push(dartThrow);
                     total += value;
