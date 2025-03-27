@@ -189,14 +189,58 @@
         }
 
         .current-score p {
-            font-size: 48px; /* Increased size for the big number */
+            font-size: 72px; /* Increased size for the big number */
             font-weight: bold;
             color: #4CAF50;
             margin: 0;
+            line-height: 1; /* Ensure proper vertical alignment */
         }
 
         body.dark-mode .current-score p {
             color: #66b0ff;
+        }
+
+        /* Pulse Animation for Score */
+        #currentScoreDisplay {
+            display: inline-block;
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                text-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                text-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
+            }
+            100% {
+                transform: scale(1);
+                text-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+            }
+        }
+
+        body.dark-mode .pulse {
+            animation: pulseDark 0.5s ease-in-out;
+        }
+
+        @keyframes pulseDark {
+            0% {
+                transform: scale(1);
+                text-shadow: 0 0 5px rgba(102, 176, 255, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                text-shadow: 0 0 10px rgba(102, 176, 255, 0.8);
+            }
+            100% {
+                transform: scale(1);
+                text-shadow: 0 0 5px rgba(102, 176, 255, 0.5);
+            }
         }
 
         /* Timer Section */
@@ -621,7 +665,7 @@
             }
 
             .current-score p {
-                font-size: 36px; /* Adjusted for mobile */
+                font-size: 56px; /* Adjusted for mobile */
             }
 
             .timer {
@@ -822,6 +866,9 @@
             const step = difference / totalFrames;
             let currentFrame = 0;
             let currentValue = oldScore;
+
+            // Trigger the pulse animation
+            scoreDisplay.classList.add('pulse');
 
             const animationInterval = setInterval(() => {
                 currentFrame++;
