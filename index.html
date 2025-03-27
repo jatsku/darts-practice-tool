@@ -179,7 +179,8 @@
             margin-bottom: 20px;
             width: 90%;
             max-width: 400px;
-            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         body.dark-mode .current-score {
@@ -188,22 +189,38 @@
         }
 
         .current-score p {
-            font-size: 28px;
+            font-size: 48px; /* Increased size for the big number */
             font-weight: bold;
-            color: #000;
+            color: #4CAF50;
+            margin: 0;
         }
 
         body.dark-mode .current-score p {
-            color: #fff;
-        }
-
-        .current-score p span {
-            font-size: 36px;
-            color: #4CAF50;
-        }
-
-        body.dark-mode .current-score p span {
             color: #66b0ff;
+        }
+
+        /* Flip Animation for Score */
+        #currentScoreDisplay {
+            display: inline-block;
+            perspective: 1000px;
+        }
+
+        .flip {
+            animation: flip 0.6s ease-in-out;
+        }
+
+        @keyframes flip {
+            0% {
+                transform: rotateX(0deg);
+            }
+            50% {
+                transform: rotateX(90deg);
+                opacity: 0;
+            }
+            100% {
+                transform: rotateX(0deg);
+                opacity: 1;
+            }
         }
 
         /* Timer Section */
@@ -241,7 +258,7 @@
             text-align: left;
         }
 
-        body.dark-mode .input-section label {
+        BODY.DARK-MODE .INPUT-SECTION LABEL {
             color: #ccc;
         }
 
@@ -628,11 +645,7 @@
             }
 
             .current-score p {
-                font-size: 24px;
-            }
-
-            .current-score p span {
-                font-size: 30px;
+                font-size: 36px; /* Adjusted for mobile */
             }
 
             .timer {
@@ -701,7 +714,7 @@
     </div>
 
     <!-- Buy Me a Coffee Link -->
-    <a href="https://www.buymeacoffee.com/yourusername" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
+    <a href="https://www.buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
 
     <!-- Help Icon -->
     <div class="help-icon" onclick="showHelpModal()" role="button" aria-label="Show help instructions" tabindex="0" onkeypress="if(event.key === 'Enter') showHelpModal()">?</div>
@@ -711,7 +724,7 @@
     </div>
 
     <div class="current-score" role="status" aria-live="polite">
-        <p>Current Score: <span id="currentScoreDisplay">501</span></p>
+        <p><span id="currentScoreDisplay">501</span></p>
     </div>
 
     <div id="errorMessage" class="error" role="alert" aria-live="assertive">
@@ -780,7 +793,7 @@
             <h2>How to Use</h2>
             <p>1. Each turn, you'll see a throw (e.g., T18 T17 T2).</p>
             <p>2. Calculate the total score for the throw and enter it in "Total Score".</p>
-            <p>3. Subtract the total from your current score (start at 501) and enter the remainder in "Remaining Score".</p>
+            <p>3. Subtract the total from your current score (starts at 501) and enter the remainder in "Remaining Score".</p>
             <p>4. Press "Add Score" to continue. To win, you must reach exactly 0 with a double.</p>
             <p>5. Use "Start/Stop/Restart" to control the game.</p>
         </div>
@@ -823,15 +836,11 @@
         let currentTimerValue = 0;
         let timerInterval = null;
 
-        // Update current score display
+        // Update current score display with flip animation
         function updateCurrentScoreDisplay() {
             const scoreDisplay = document.getElementById('currentScoreDisplay');
             scoreDisplay.textContent = currentScore;
-            const currentScoreElement = document.querySelector('.current-score');
-            currentScoreElement.style.transform = 'scale(1.05)';
-            setTimeout(() => {
-                currentScoreElement.style.transform = 'scale(1)';
-            }, 300);
+            scoreDisplay.classList.add('flip'); // Trigger the flip animation
         }
 
         // Dark Mode Functionality
