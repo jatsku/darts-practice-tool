@@ -355,12 +355,12 @@
             background-color: #45a049;
         }
 
-        #startRestartBtn {
+        #controlBtn {
             background-color: #2196F3;
             color: white;
         }
 
-        #startRestartBtn:hover {
+        #controlBtn:hover {
             background-color: #1e88e5;
         }
 
@@ -701,7 +701,7 @@
     </div>
 
     <!-- Buy Me a Coffee Link -->
-    <a href="https://www.buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
+    <a href="https://www.buymeacoffee.com/yourusername" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
 
     <!-- Help Icon -->
     <div class="help-icon" onclick="showHelpModal()" role="button" aria-label="Show help instructions" tabindex="0" onkeypress="if(event.key === 'Enter') showHelpModal()">?</div>
@@ -726,14 +726,14 @@
         <label for="throwInput">Throw:</label>
         <input type="text" id="throwInput" readonly value="" aria-label="Current dart throw">
         <label for="throwTotalInput">Total Score:</label>
-        <input type="number" id="throwTotalInput" placeholder="e.g., 60" aria-label="Enter the total score for the throw" onkeypress="if(event.key === 'Enter') addScore()">
+        <input type="number" id="throwTotalInput" placeholder="e.g., 60" aria-label="Enter the total score for the throw" onkeypress="if(event.key === 'Enter') { document.getElementById('reqInput').focus(); }">
         <label for="reqInput">Remaining Score:</label>
         <input type="number" id="reqInput" placeholder="e.g., 441" aria-label="Enter the remaining score after the throw" onkeypress="if(event.key === 'Enter') addScore()">
     </div>
 
     <div class="button-group">
         <button id="addScoreBtn" disabled aria-label="Add the current score to update the game">Add Score</button>
-        <button id="startRestartBtn" aria-label="Start or restart the game">Start/Restart</button>
+        <button id="controlBtn" aria-label="Start, stop, or restart the game">Start</button>
     </div>
 
     <div class="stats">
@@ -764,7 +764,7 @@
     <!-- Modal for Congratulations and Leaderboard Name -->
     <div id="gameEndModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModalAndRestart()" role="button" aria-label="Close the modal and restart the game" tabindex="0" onkeypress="if(event.key === 'Enter') closeModalAndRestart()">×</span>
+            <span class="close-btn" onclick="closeModal()" role="button" aria-label="Close the modal" tabindex="0" onkeypress="if(event.key === 'Enter') closeModal()">×</span>
             <h2>Congratulations!</h2>
             <p id="congratsMessage" role="status" aria-live="polite"></p>
             <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard" aria-label="Enter your name for the leaderboard">
@@ -782,7 +782,7 @@
             <p>2. Calculate the total score for the throw and enter it in "Total Score".</p>
             <p>3. Subtract the total from your current score (start at 501) and enter the remainder in "Remaining Score".</p>
             <p>4. Press "Add Score" to continue. To win, you must reach exactly 0 with a double.</p>
-            <p>5. Use "Start/Restart" to begin or start over.</p>
+            <p>5. Use "Start/Stop/Restart" to control the game.</p>
         </div>
     </div>
 
@@ -819,6 +819,7 @@
         let totalThrowsSum = 0;
         let gameFinished = false;
         let gameStarted = false;
+        let gamePaused = false;
         let currentTimerValue = 0;
         let timerInterval = null;
 
@@ -826,7 +827,6 @@
         function updateCurrentScoreDisplay() {
             const scoreDisplay = document.getElementById('currentScoreDisplay');
             scoreDisplay.textContent = currentScore;
-            // Add a subtle animation on update
             const currentScoreElement = document.querySelector('.current-score');
             currentScoreElement.style.transform = 'scale(1.05)';
             setTimeout(() => {
@@ -837,13 +837,11 @@
         // Dark Mode Functionality
         const darkModeSwitch = document.getElementById('darkModeSwitch');
         
-        // Load dark mode preference from localStorage
         if (localStorage.getItem('darkMode') === 'enabled') {
             document.body.classList.add('dark-mode');
             darkModeSwitch.checked = true;
         }
 
-        // Toggle dark mode
         darkModeSwitch.addEventListener('change', () => {
             if (darkModeSwitch.checked) {
                 document.body.classList.add('dark-mode');
@@ -913,16 +911,17 @@
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
+            gameFinished = true;
+            updateControlButton();
         }
 
-        // Function to close the modal and restart the game
-        function closeModalAndRestart() {
+        // Function to close the modal without restarting the game
+        function closeModal() {
             const modal = document.getElementById('gameEndModal');
             const modalError = document.getElementById('modalError');
             modal.style.display = 'none';
             modalError.style.display = 'none';
             document.getElementById('playerNameInput').value = '';
-            startRestartGame();
         }
 
         // Function to submit leaderboard entry with retry mechanism
@@ -951,7 +950,7 @@
                     });
                     await updateLeaderboardDisplay();
                     success = true;
-                    closeModalAndRestart();
+                    closeModal();
                 } catch (error) {
                     console.error(`Attempt ${attempt} failed. Error adding to leaderboard:`, error);
                     if (attempt === maxRetries) {
@@ -1043,9 +1042,7 @@
                         const trebleSection = Math.floor((remaining - 2) / 3);
                         const value = trebleSection * 3;
                         if (trebleSection >= 1 && trebleSection <= 20) {
-                            // Check if this would leave a score of 1
                             if (remaining - value === 1) {
-                                // Adjust to leave a finishable score (e.g., leave 2 instead)
                                 const adjustedValue = remaining - 2;
                                 if (adjustedValue >= 1 && adjustedValue <= 20) {
                                     darts.push({ throw: `S${adjustedValue}`, value: adjustedValue });
@@ -1138,7 +1135,7 @@
 
         // Generate up to 3 dart throws one by one with 1.5-second interval
         async function generateTurn() {
-            if (gameFinished) return;
+            if (gameFinished || gamePaused) return;
             dartThrows = [];
             let total = 0;
             isTurnReady = false;
@@ -1159,16 +1156,13 @@
             } else {
                 while (dartCount < 3 && total < 180 && total < currentScore) {
                     const { throw: dartThrow, value } = generateDartThrow();
-                    // Ensure this throw doesn't leave a score of 1
                     if (currentScore - (total + value) === 1) {
-                        // Adjust the throw to leave a finishable score (e.g., leave 2 instead)
                         const adjustedValue = currentScore - total - 2;
                         if (adjustedValue >= 1 && adjustedValue <= 20) {
                             dartThrows.push(`S${adjustedValue}`);
                             total += adjustedValue;
                             document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + `S${adjustedValue}`;
                         } else {
-                            // Fallback to a smaller throw
                             const fallbackValue = currentScore - total - 40;
                             if (fallbackValue >= 1 && fallbackValue <= 20) {
                                 dartThrows.push(`S${fallbackValue}`);
@@ -1197,15 +1191,31 @@
 
         // Update the timer with two decimal places, more frequently
         function updateTimer() {
+            if (gamePaused || gameFinished) return;
             const elapsed = (Date.now() - startTime) / 1000;
             document.getElementById('timer').textContent = elapsed.toFixed(2);
+        }
+
+        // Update the control button's text and aria-label based on game state
+        function updateControlButton() {
+            const controlBtn = document.getElementById('controlBtn');
+            if (!gameStarted) {
+                controlBtn.textContent = 'Start';
+                controlBtn.setAttribute('aria-label', 'Start the game');
+            } else if (gameStarted && !gamePaused && !gameFinished) {
+                controlBtn.textContent = 'Stop';
+                controlBtn.setAttribute('aria-label', 'Stop the game');
+            } else {
+                controlBtn.textContent = 'Restart';
+                controlBtn.setAttribute('aria-label', 'Restart the game');
+            }
         }
 
         // Handle adding a score
         async function addScore() {
             console.log('addScore called');
             try {
-                if (!gameStarted) {
+                if (!gameStarted || gamePaused) {
                     const errorMessage = document.getElementById('errorMessage');
                     errorMessage.textContent = 'Please start the game first!';
                     errorMessage.style.display = 'block';
@@ -1299,6 +1309,7 @@
                 }
                 document.getElementById('throwTotalInput').value = '';
                 document.getElementById('reqInput').value = '';
+                document.getElementById('throwTotalInput').focus();
             } catch (error) {
                 console.error('Error in addScore:', error);
                 const errorMessage = document.getElementById('errorMessage');
@@ -1307,10 +1318,11 @@
             }
         }
 
-        // Start or restart the game
-        function startRestartGame() {
-            console.log('startRestartGame called');
-            try {
+        // Start, stop, or restart the game
+        function controlGame() {
+            const controlBtn = document.getElementById('controlBtn');
+            if (!gameStarted) {
+                // Start the game
                 currentScore = 501;
                 throwsCount = 0;
                 turns = 0;
@@ -1320,6 +1332,7 @@
                 totalThrowsSum = 0;
                 gameFinished = false;
                 gameStarted = true;
+                gamePaused = false;
                 document.getElementById('throws').textContent = '0';
                 document.getElementById('turns').textContent = '0';
                 document.getElementById('lastThrow').textContent = '0.00';
@@ -1339,19 +1352,53 @@
                 timerInterval = setInterval(updateTimer, 10);
 
                 generateTurn();
-            } catch (error) {
-                console.error('Error in startRestartGame:', error);
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.textContent = 'An unexpected error occurred while starting/restarting. Please try again.';
-                errorMessage.style.display = 'block';
+            } else if (gameStarted && !gamePaused && !gameFinished) {
+                // Stop the game
+                gamePaused = true;
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                document.getElementById('addScoreBtn').disabled = true;
+            } else {
+                // Restart the game
+                currentScore = 501;
+                throwsCount = 0;
+                turns = 0;
+                startTime = Date.now();
+                lastThrowTime = Date.now();
+                totalThrowTime = 0;
+                totalThrowsSum = 0;
+                gameFinished = false;
+                gameStarted = true;
+                gamePaused = false;
+                document.getElementById('throws').textContent = '0';
+                document.getElementById('turns').textContent = '0';
+                document.getElementById('lastThrow').textContent = '0.00';
+                document.getElementById('avgTime').textContent = '0.00';
+                document.getElementById('timer').textContent = '0.00';
+                document.getElementById('errorMessage').style.display = 'none';
+                document.getElementById('throwInput').value = '';
+                document.getElementById('throwTotalInput').value = '';
+                document.getElementById('reqInput').value = '';
+                updateCurrentScoreDisplay();
+
+                document.getElementById('addScoreBtn').disabled = false;
+
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                timerInterval = setInterval(updateTimer, 10);
+
+                generateTurn();
             }
+            updateControlButton();
         }
 
         // Wait for DOM to load before adding event listeners
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM fully loaded');
             const addScoreBtn = document.getElementById('addScoreBtn');
-            const startRestartBtn = document.getElementById('startRestartBtn');
+            const controlBtn = document.getElementById('controlBtn');
             const submitLeaderboardBtn = document.getElementById('submitLeaderboardBtn');
 
             if (addScoreBtn) {
@@ -1362,12 +1409,12 @@
                 console.error('Add Score button not found');
             }
 
-            if (startRestartBtn) {
-                startRestartBtn.addEventListener('click', () => {
-                    startRestartGame();
+            if (controlBtn) {
+                controlBtn.addEventListener('click', () => {
+                    controlGame();
                 });
             } else {
-                console.error('Start/Restart button not found');
+                console.error('Control button not found');
             }
 
             if (submitLeaderboardBtn) {
@@ -1387,9 +1434,10 @@
             document.getElementById('avgTime').textContent = '0.00';
             document.getElementById('timer').textContent = '0.00';
             updateCurrentScoreDisplay();
+            updateControlButton();
         });
 
-        window.closeModalAndRestart = closeModalAndRestart;
+        window.closeModal = closeModal;
         window.toggleLeaderboard = toggleLeaderboard;
         window.showHelpModal = showHelpModal;
         window.closeHelpModal = closeHelpModal;
