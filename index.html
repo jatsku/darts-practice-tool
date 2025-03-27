@@ -305,16 +305,25 @@
             color: white;
         }
 
-        #addScoreBtn:hover {
+        #addScoreBtn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        body.dark-mode #addScoreBtn:disabled {
+            background-color: #666;
+        }
+
+        #addScoreBtn:hover:not(:disabled) {
             background-color: #45a049;
         }
 
-        #restartBtn {
+        #startRestartBtn {
             background-color: #2196F3;
             color: white;
         }
 
-        #restartBtn:hover {
+        #startRestartBtn:hover {
             background-color: #1e88e5;
         }
 
@@ -655,7 +664,7 @@
     </div>
 
     <!-- Buy Me a Coffee Link -->
-    <a href="https://buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
+    <a href="https://www.buymeacoffee.com/yourusername" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
 
     <!-- Help Icon -->
     <div class="help-icon" onclick="showHelpModal()">?</div>
@@ -686,8 +695,8 @@
     </div>
 
     <div class="button-group">
-        <button id="addScoreBtn">Add Score</button>
-        <button id="restartBtn">Restart</button>
+        <button id="addScoreBtn" disabled>Add Score</button>
+        <button id="startRestartBtn">Start/Restart</button>
     </div>
 
     <div class="stats">
@@ -732,11 +741,11 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeHelpModal()">×</span>
             <h2>How to Use</h2>
-            <p>1. Each turn, you'll see a throw (e.g., T13[3x13] S6[1x6] D7[2x7] = 59).</p>
+            <p>1. Each turn, you'll see a throw (e.g., T18 T17 T2).</p>
             <p>2. Calculate the total score for the throw and enter it in "Total Score".</p>
             <p>3. Subtract the total from your current score (start at 501) and enter the remainder in "Remaining Score".</p>
-            <p>4. Press "Add Score" to continue. To win, you must reach exactly 0.</p>
-            <p>5. Use "Restart" to start over.</p>
+            <p>4. Press "Add Score" to continue. To win, you must reach exactly 0 with a double.</p>
+            <p>5. Use "Start/Restart" to begin or start over.</p>
         </div>
     </div>
 
@@ -772,7 +781,9 @@
         let isTurnReady = false;
         let totalThrowsSum = 0;
         let gameFinished = false;
+        let gameStarted = false; // New variable to track if the game has started
         let currentTimerValue = 0;
+        let timerInterval = null; // To manage the timer interval
 
         // Update current score display
         function updateCurrentScoreDisplay() {
@@ -861,6 +872,10 @@
             const congratsMessage = document.getElementById('congratsMessage');
             congratsMessage.textContent = `Time: ${timerValue} sec`;
             modal.style.display = 'block';
+            // Stop the timer when the game ends
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
         }
 
         // Function to close the modal and restart the game
@@ -870,7 +885,7 @@
             modal.style.display = 'none';
             modalError.style.display = 'none';
             document.getElementById('playerNameInput').value = '';
-            restartGame();
+            startRestartGame();
         }
 
         // Function to submit leaderboard entry with retry mechanism
@@ -933,28 +948,41 @@
             let typeThrow, section, value;
 
             if (targetScore !== null && targetScore > 0) {
-                if (targetScore >= 40 && targetScore <= 60) {
-                    const doubleValue = Math.floor((targetScore - 20) / 2);
-                    if (doubleValue >= 1 && doubleValue <= 20) {
-                        section = targetScore - doubleValue * 2;
-                        typeThrow = section <= 20 ? 'S' : 'T';
-                        if (typeThrow === 'T') section = Math.floor(section / 3);
-                        value = typeThrow === 'S' ? section : section * 3;
-                        return { throw: `${typeThrow}${section}`, value };
-                    }
-                } else if (targetScore >= 2 && targetScore <= 40) {
-                    section = Math.floor(targetScore / 2);
+                // Handle finishing scores (must end on a double)
+                if (targetScore >= 2 && targetScore <= 40 && targetScore % 2 === 0) {
+                    // Direct double finish (e.g., 40 = D20, 32 = D16)
+                    section = targetScore / 2;
                     typeThrow = 'D';
-                    value = section * 2;
+                    value = targetScore;
                     return { throw: `${typeThrow}${section}`, value };
                 } else if (targetScore === 50) {
+                    // Bullseye finish (D25)
                     section = 25;
                     typeThrow = 'D';
                     value = 50;
                     return { throw: `${typeThrow}${section}`, value };
+                } else if (targetScore > 40 && targetScore <= 60) {
+                    // Try to leave a double (e.g., 60 = T20 to leave 40)
+                    section = 20;
+                    typeThrow = 'T';
+                    value = 60;
+                    return { throw: `${typeThrow}${section}`, value };
+                } else if (targetScore > 60 && targetScore <= 100) {
+                    // Try to leave a double (e.g., 100 = T20 S20 to leave 20)
+                    section = 20;
+                    typeThrow = 'T';
+                    value = 60;
+                    return { throw: `${typeThrow}${section}`, value };
+                } else if (targetScore > 100 && targetScore <= 170) {
+                    // Try to leave a finishable score (e.g., 141 = T20 T19 to leave 24)
+                    section = 20;
+                    typeThrow = 'T';
+                    value = 60;
+                    return { throw: `${typeThrow}${section}`, value };
                 }
             }
 
+            // Default random throw if no target score or target score not handled
             section = sections[Math.floor(Math.random() * sections.length)];
             typeThrow = section === 25 ? (Math.random() < 0.5 ? 'S' : 'D') : ['S', 'D', 'T'][Math.floor(Math.random() * 3)];
             value = typeThrow === 'S' ? section : typeThrow === 'D' ? section * 2 : section * 3;
@@ -983,45 +1011,6 @@
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     dartCount++;
                 }
-
-                if (remaining !== 0) {
-                    dartThrows = [];
-                    total = 0;
-                    remaining = targetScore;
-                    dartCount = 0;
-
-                    if (remaining > 40) {
-                        const firstScore = Math.min(remaining - 32, 60);
-                        const { throw: dartThrow, value } = generateDartThrow(firstScore);
-                        dartThrows.push(dartThrow);
-                        total += value;
-                        remaining -= value;
-                        document.getElementById('throwInput').value = dartThrow;
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        dartCount++;
-                    }
-
-                    if (remaining > 40 && dartCount < 3) {
-                        const secondScore = Math.min(remaining - 32, 60);
-                        const { throw: dartThrow, value } = generateDartThrow(secondScore);
-                        dartThrows.push(dartThrow);
-                        total += value;
-                        remaining -= value;
-                        document.getElementById('throwInput').value += ' ' + dartThrow;
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        dartCount++;
-                    }
-
-                    if (remaining > 0 && dartCount < 3) {
-                        const { throw: dartThrow, value } = generateDartThrow(remaining);
-                        dartThrows.push(dartThrow);
-                        total += value;
-                        remaining -= value;
-                        document.getElementById('throwInput').value += ' ' + dartThrow;
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        dartCount++;
-                    }
-                }
             } else {
                 while (dartCount < 3 && total < 180) {
                     const { throw: dartThrow, value } = generateDartThrow();
@@ -1048,6 +1037,13 @@
         async function addScore() {
             console.log('addScore called');
             try {
+                if (!gameStarted) {
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.textContent = 'Please start the game first!';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
                 const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
                 const reqInput = parseInt(document.getElementById('reqInput').value);
                 const errorMessage = document.getElementById('errorMessage');
@@ -1135,10 +1131,11 @@
             }
         }
 
-        // Restart the game
-        function restartGame() {
-            console.log('restartGame called');
+        // Start or restart the game
+        function startRestartGame() {
+            console.log('startRestartGame called');
             try {
+                // Reset game state
                 currentScore = 501;
                 throwsCount = 0;
                 turns = 0;
@@ -1147,20 +1144,33 @@
                 totalThrowTime = 0;
                 totalThrowsSum = 0;
                 gameFinished = false;
+                gameStarted = true; // Mark the game as started
                 document.getElementById('throws').textContent = '0';
                 document.getElementById('turns').textContent = '0';
                 document.getElementById('lastThrow').textContent = '0';
                 document.getElementById('avgTime').textContent = '0';
                 document.getElementById('timer').textContent = '0';
                 document.getElementById('errorMessage').style.display = 'none';
+                document.getElementById('throwInput').value = '';
                 document.getElementById('throwTotalInput').value = '';
                 document.getElementById('reqInput').value = '';
                 updateCurrentScoreDisplay();
+
+                // Enable the Add Score button
+                document.getElementById('addScoreBtn').disabled = false;
+
+                // Start the timer
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                timerInterval = setInterval(updateTimer, 1000);
+
+                // Generate the first turn
                 generateTurn();
             } catch (error) {
-                console.error('Error in restartGame:', error);
+                console.error('Error in startRestartGame:', error);
                 const errorMessage = document.getElementById('errorMessage');
-                errorMessage.textContent = 'An unexpected error occurred while restarting. Please try again.';
+                errorMessage.textContent = 'An unexpected error occurred while starting/restarting. Please try again.';
                 errorMessage.style.display = 'block';
             }
         }
@@ -1169,7 +1179,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM fully loaded');
             const addScoreBtn = document.getElementById('addScoreBtn');
-            const restartBtn = document.getElementById('restartBtn');
+            const startRestartBtn = document.getElementById('startRestartBtn');
             const submitLeaderboardBtn = document.getElementById('submitLeaderboardBtn');
 
             if (addScoreBtn) {
@@ -1180,12 +1190,12 @@
                 console.error('Add Score button not found');
             }
 
-            if (restartBtn) {
-                restartBtn.addEventListener('click', () => {
-                    restartGame();
+            if (startRestartBtn) {
+                startRestartBtn.addEventListener('click', () => {
+                    startRestartGame();
                 });
             } else {
-                console.error('Restart button not found');
+                console.error('Start/Restart button not found');
             }
 
             if (submitLeaderboardBtn) {
@@ -1196,9 +1206,16 @@
                 console.error('Submit Leaderboard button not found');
             }
 
+            // Initialize leaderboard display, but do not start the game
             updateLeaderboardDisplay();
-            setInterval(updateTimer, 1000);
-            generateTurn();
+
+            // Initialize the UI without starting the game
+            document.getElementById('throwInput').value = '';
+            document.getElementById('throws').textContent = '0';
+            document.getElementById('turns').textContent = '0';
+            document.getElementById('lastThrow').textContent = '0';
+            document.getElementById('avgTime').textContent = '0';
+            document.getElementById('timer').textContent = '0';
             updateCurrentScoreDisplay();
         });
 
