@@ -279,6 +279,43 @@
             background-color: #555;
         }
 
+        /* Visual Feedback for Inputs */
+        .input-correct {
+            animation: flashGreen 0.3s;
+        }
+
+        .input-error {
+            animation: flashRed 0.3s;
+        }
+
+        @keyframes flashGreen {
+            0% { border-color: #4CAF50; box-shadow: 0 0 5px #4CAF50; }
+            100% { border-color: #ccc; box-shadow: none; }
+        }
+
+        @keyframes flashRed {
+            0% { border-color: #d32f2f; box-shadow: 0 0 5px #d32f2f; }
+            100% { border-color: #ccc; box-shadow: none; }
+        }
+
+        body.dark-mode .input-correct {
+            animation: flashGreenDark 0.3s;
+        }
+
+        body.dark-mode .input-error {
+            animation: flashRedDark 0.3s;
+        }
+
+        @keyframes flashGreenDark {
+            0% { border-color: #66b0ff; box-shadow: 0 0 5px #66b0ff; }
+            100% { border-color: #666; box-shadow: none; }
+        }
+
+        @keyframes flashRedDark {
+            0% { border-color: #ff6666; box-shadow: 0 0 5px #ff6666; }
+            100% { border-color: #666; box-shadow: none; }
+        }
+
         /* Buttons */
         .button-group {
             display: flex;
@@ -658,7 +695,7 @@
     <div class="dark-mode-toggle">
         <label for="darkModeSwitch">Dark Mode</label>
         <label class="switch">
-            <input type="checkbox" id="darkModeSwitch">
+            <input type="checkbox" id="darkModeSwitch" aria-label="Toggle dark mode">
             <span class="slider"></span>
         </label>
     </div>
@@ -667,17 +704,17 @@
     <a href="https://www.buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
 
     <!-- Help Icon -->
-    <div class="help-icon" onclick="showHelpModal()">?</div>
+    <div class="help-icon" onclick="showHelpModal()" role="button" aria-label="Show help instructions" tabindex="0" onkeypress="if(event.key === 'Enter') showHelpModal()">?</div>
 
     <div class="header">
         <h1>Darts Practice Tool</h1>
     </div>
 
-    <div class="current-score">
+    <div class="current-score" role="status" aria-live="polite">
         <p>Current Score: <span id="currentScoreDisplay">501</span></p>
     </div>
 
-    <div id="errorMessage" class="error">
+    <div id="errorMessage" class="error" role="alert" aria-live="assertive">
         You made an error! Try again...
     </div>
 
@@ -686,17 +723,17 @@
     </div>
 
     <div class="input-section">
-        <label>Throw:</label>
-        <input type="text" id="throwInput" readonly value="">
-        <label>Total Score:</label>
-        <input type="number" id="throwTotalInput" placeholder="e.g., 60">
-        <label>Remaining Score:</label>
-        <input type="number" id="reqInput" placeholder="e.g., 441">
+        <label for="throwInput">Throw:</label>
+        <input type="text" id="throwInput" readonly value="" aria-label="Current dart throw">
+        <label for="throwTotalInput">Total Score:</label>
+        <input type="number" id="throwTotalInput" placeholder="e.g., 60" aria-label="Enter the total score for the throw" onkeypress="if(event.key === 'Enter') addScore()">
+        <label for="reqInput">Remaining Score:</label>
+        <input type="number" id="reqInput" placeholder="e.g., 441" aria-label="Enter the remaining score after the throw" onkeypress="if(event.key === 'Enter') addScore()">
     </div>
 
     <div class="button-group">
-        <button id="addScoreBtn" disabled>Add Score</button>
-        <button id="startRestartBtn">Start/Restart</button>
+        <button id="addScoreBtn" disabled aria-label="Add the current score to update the game">Add Score</button>
+        <button id="startRestartBtn" aria-label="Start or restart the game">Start/Restart</button>
     </div>
 
     <div class="stats">
@@ -706,7 +743,7 @@
     </div>
 
     <div class="leaderboard-section">
-        <div class="toggle-leaderboard" onclick="toggleLeaderboard()">Show Top 10 Fastest Times</div>
+        <div class="toggle-leaderboard" onclick="toggleLeaderboard()" role="button" aria-label="Toggle visibility of the top 10 fastest times leaderboard" tabindex="0" onkeypress="if(event.key === 'Enter') toggleLeaderboard()">Show Top 10 Fastest Times</div>
         <div class="leaderboard" id="leaderboardSection">
             <h2>Top 10 Fastest Times</h2>
             <table>
@@ -727,19 +764,19 @@
     <!-- Modal for Congratulations and Leaderboard Name -->
     <div id="gameEndModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModalAndRestart()">×</span>
+            <span class="close-btn" onclick="closeModalAndRestart()" role="button" aria-label="Close the modal and restart the game" tabindex="0" onkeypress="if(event.key === 'Enter') closeModalAndRestart()">×</span>
             <h2>Congratulations!</h2>
-            <p id="congratsMessage"></p>
-            <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard">
-            <button id="submitLeaderboardBtn">Submit</button>
-            <p id="modalError" class="modal-error">Failed to save your score. Please try again.</p>
+            <p id="congratsMessage" role="status" aria-live="polite"></p>
+            <input type="text" id="playerNameInput" placeholder="Enter your name for the leaderboard" aria-label="Enter your name for the leaderboard">
+            <button id="submitLeaderboardBtn" aria-label="Submit your score to the leaderboard">Submit</button>
+            <p id="modalError" class="modal-error" role="alert" aria-live="assertive">Failed to save your score. Please try again.</p>
         </div>
     </div>
 
     <!-- Help Modal -->
     <div id="helpModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeHelpModal()">×</span>
+            <span class="close-btn" onclick="closeHelpModal()" role="button" aria-label="Close the help modal" tabindex="0" onkeypress="if(event.key === 'Enter') closeHelpModal()">×</span>
             <h2>How to Use</h2>
             <p>1. Each turn, you'll see a throw (e.g., T18 T17 T2).</p>
             <p>2. Calculate the total score for the throw and enter it in "Total Score".</p>
@@ -861,7 +898,6 @@
             leaderboardTable.innerHTML = '';
             leaderboard.forEach((entry, index) => {
                 const row = document.createElement('tr');
-                // Format the time to always show two decimal places
                 const formattedTime = Number.isInteger(entry.time) ? `${entry.time}.00` : entry.time.toFixed(2);
                 row.innerHTML = `<td>${index + 1}</td><td>${entry.name}</td><td>${formattedTime}</td><td>${entry.date}</td>`;
                 leaderboardTable.appendChild(row);
@@ -872,10 +908,8 @@
         function showGameEndModal(timerValue) {
             const modal = document.getElementById('gameEndModal');
             const congratsMessage = document.getElementById('congratsMessage');
-            // Display the timer value with two decimal places
             congratsMessage.textContent = `Time: ${timerValue.toFixed(2)} sec`;
             modal.style.display = 'block';
-            // Stop the timer when the game ends
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
@@ -911,7 +945,7 @@
                     attempt++;
                     await addDoc(collection(db, 'leaderboard'), {
                         name: playerName,
-                        time: currentTimerValue, // Store the time with decimals
+                        time: currentTimerValue,
                         date: recordDate,
                         timestamp: serverTimestamp()
                     });
@@ -939,9 +973,11 @@
             if (leaderboardSection.classList.contains('visible')) {
                 leaderboardSection.classList.remove('visible');
                 toggleText.textContent = 'Show Top 10 Fastest Times';
+                toggleText.setAttribute('aria-label', 'Show the top 10 fastest times leaderboard');
             } else {
                 leaderboardSection.classList.add('visible');
                 toggleText.textContent = 'Hide Top 10 Fastest Times';
+                toggleText.setAttribute('aria-label', 'Hide the top 10 fastest times leaderboard');
             }
         }
 
@@ -951,33 +987,27 @@
             let typeThrow, section, value;
 
             if (targetScore !== null && targetScore > 0) {
-                // Handle finishing scores (must end on a double)
                 if (targetScore >= 2 && targetScore <= 40 && targetScore % 2 === 0) {
-                    // Direct double finish (e.g., 40 = D20, 32 = D16)
                     section = targetScore / 2;
                     typeThrow = 'D';
                     value = targetScore;
                     return { throw: `${typeThrow}${section}`, value };
                 } else if (targetScore === 50) {
-                    // Bullseye finish (D25)
                     section = 25;
                     typeThrow = 'D';
                     value = 50;
                     return { throw: `${typeThrow}${section}`, value };
                 } else if (targetScore > 40 && targetScore <= 60) {
-                    // Try to leave a double (e.g., 60 = T20 to leave 40)
                     section = 20;
                     typeThrow = 'T';
                     value = 60;
                     return { throw: `${typeThrow}${section}`, value };
                 } else if (targetScore > 60 && targetScore <= 100) {
-                    // Try to leave a double (e.g., 100 = T20 S20 to leave 20)
                     section = 20;
                     typeThrow = 'T';
                     value = 60;
                     return { throw: `${typeThrow}${section}`, value };
                 } else if (targetScore > 100 && targetScore <= 170) {
-                    // Try to leave a finishable score (e.g., 141 = T20 T19 to leave 24)
                     section = 20;
                     typeThrow = 'T';
                     value = 60;
@@ -985,7 +1015,6 @@
                 }
             }
 
-            // Default random throw if no target score or target score not handled
             section = sections[Math.floor(Math.random() * sections.length)];
             typeThrow = section === 25 ? (Math.random() < 0.5 ? 'S' : 'D') : ['S', 'D', 'T'][Math.floor(Math.random() * 3)];
             value = typeThrow === 'S' ? section : typeThrow === 'D' ? section * 2 : section * 3;
@@ -998,69 +1027,85 @@
             let remaining = targetScore;
             let dartCount = 0;
 
-            // Step 1: Check if the score can be finished directly with a double
             if (remaining >= 2 && remaining <= 40 && remaining % 2 === 0) {
-                // Direct double finish (e.g., 40 = D20)
                 darts.push({ throw: `D${remaining / 2}`, value: remaining });
                 remaining = 0;
             } else if (remaining === 50) {
-                // Bullseye finish (D25)
                 darts.push({ throw: 'D25', value: 50 });
                 remaining = 0;
-            } else if (remaining === 1) {
-                // Cannot finish on 1, leave a double (e.g., hit S1 to leave 0, but we need to adjust)
-                darts.push({ throw: 'S1', value: 1 });
-                remaining = 0;
             } else {
-                // Step 2: Use up to 3 darts to finish exactly, ending with a double
                 while (dartCount < 2 && remaining > 0) {
                     if (remaining > 100) {
-                        // Use a treble to reduce the score (e.g., T20 = 60)
                         const value = 60;
                         darts.push({ throw: 'T20', value });
                         remaining -= value;
                     } else if (remaining > 60) {
-                        // Use a treble to leave a double (e.g., 81 -> T19 to leave 24)
                         const trebleSection = Math.floor((remaining - 2) / 3);
                         const value = trebleSection * 3;
                         if (trebleSection >= 1 && trebleSection <= 20) {
-                            darts.push({ throw: `T${trebleSection}`, value });
-                            remaining -= value;
+                            // Check if this would leave a score of 1
+                            if (remaining - value === 1) {
+                                // Adjust to leave a finishable score (e.g., leave 2 instead)
+                                const adjustedValue = remaining - 2;
+                                if (adjustedValue >= 1 && adjustedValue <= 20) {
+                                    darts.push({ throw: `S${adjustedValue}`, value: adjustedValue });
+                                    remaining -= adjustedValue;
+                                } else {
+                                    darts.push({ throw: 'S20', value: 20 });
+                                    remaining -= 20;
+                                }
+                            } else {
+                                darts.push({ throw: `T${trebleSection}`, value });
+                                remaining -= value;
+                            }
                         } else {
-                            // Use a single to adjust (e.g., S20)
-                            const singleValue = remaining - 40; // Leave a double like D20
+                            const singleValue = remaining - 40;
                             if (singleValue >= 1 && singleValue <= 20) {
-                                darts.push({ throw: `S${singleValue}`, value: singleValue });
-                                remaining -= singleValue;
+                                if (remaining - singleValue === 1) {
+                                    const adjustedValue = remaining - 2;
+                                    darts.push({ throw: `S${adjustedValue}`, value: adjustedValue });
+                                    remaining -= adjustedValue;
+                                } else {
+                                    darts.push({ throw: `S${singleValue}`, value: singleValue });
+                                    remaining -= singleValue;
+                                }
                             } else {
                                 darts.push({ throw: 'S20', value: 20 });
                                 remaining -= 20;
                             }
                         }
                     } else if (remaining > 40) {
-                        // Use a single or treble to leave a double (e.g., 50 -> S10 to leave 40)
-                        const singleValue = remaining - 40; // Leave D20
+                        const singleValue = remaining - 40;
                         if (singleValue >= 1 && singleValue <= 20) {
-                            darts.push({ throw: `S${singleValue}`, value: singleValue });
-                            remaining -= singleValue;
+                            if (remaining - singleValue === 1) {
+                                const adjustedValue = remaining - 2;
+                                darts.push({ throw: `S${adjustedValue}`, value: adjustedValue });
+                                remaining -= adjustedValue;
+                            } else {
+                                darts.push({ throw: `S${singleValue}`, value: singleValue });
+                                remaining -= singleValue;
+                            }
                         } else {
                             darts.push({ throw: 'S20', value: 20 });
                             remaining -= 20;
                         }
                     } else if (remaining > 2 && remaining <= 40 && remaining % 2 === 0) {
-                        // Finish with a double
                         darts.push({ throw: `D${remaining / 2}`, value: remaining });
                         remaining = 0;
                     } else {
-                        // Adjust to leave a double (e.g., 41 -> S1 to leave 40)
                         const adjustValue = remaining % 2 === 0 ? 2 : 1;
-                        darts.push({ throw: `S${adjustValue}`, value: adjustValue });
-                        remaining -= adjustValue;
+                        if (remaining - adjustValue === 1) {
+                            const adjustedValue = remaining - 2;
+                            darts.push({ throw: `S${adjustedValue}`, value: adjustedValue });
+                            remaining -= adjustedValue;
+                        } else {
+                            darts.push({ throw: `S${adjustValue}`, value: adjustValue });
+                            remaining -= adjustValue;
+                        }
                     }
                     dartCount++;
                 }
 
-                // Step 3: Use the last dart to finish with a double
                 if (remaining > 0 && dartCount < 3) {
                     if (remaining === 50) {
                         darts.push({ throw: 'D25', value: 50 });
@@ -1069,11 +1114,16 @@
                         darts.push({ throw: `D${remaining / 2}`, value: remaining });
                         remaining = 0;
                     } else {
-                        // If we can't finish, leave a double for the next turn
-                        const adjustValue = remaining - 40; // Try to leave D20
+                        const adjustValue = remaining - 40;
                         if (adjustValue >= 1 && adjustValue <= 20) {
-                            darts.push({ throw: `S${adjustValue}`, value: adjustValue });
-                            remaining -= adjustValue;
+                            if (remaining - adjustValue === 1) {
+                                const adjustedValue = remaining - 2;
+                                darts.push({ throw: `S${adjustedValue}`, value: adjustedValue });
+                                remaining -= adjustedValue;
+                            } else {
+                                darts.push({ throw: `S${adjustValue}`, value: adjustValue });
+                                remaining -= adjustValue;
+                            }
                         } else {
                             darts.push({ throw: 'S20', value: 20 });
                             remaining -= 20;
@@ -1098,7 +1148,6 @@
             let dartCount = 0;
 
             if (isFinalTurn && targetScore > 1) {
-                // Generate a finishing shot that exactly matches the current score
                 const finishingDarts = generateFinishingShot(targetScore);
                 for (const dart of finishingDarts) {
                     dartThrows.push(dart.throw);
@@ -1108,12 +1157,34 @@
                     dartCount++;
                 }
             } else {
-                // Generate random throws for non-finishing turns
                 while (dartCount < 3 && total < 180 && total < currentScore) {
                     const { throw: dartThrow, value } = generateDartThrow();
-                    dartThrows.push(dartThrow);
-                    total += value;
-                    document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
+                    // Ensure this throw doesn't leave a score of 1
+                    if (currentScore - (total + value) === 1) {
+                        // Adjust the throw to leave a finishable score (e.g., leave 2 instead)
+                        const adjustedValue = currentScore - total - 2;
+                        if (adjustedValue >= 1 && adjustedValue <= 20) {
+                            dartThrows.push(`S${adjustedValue}`);
+                            total += adjustedValue;
+                            document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + `S${adjustedValue}`;
+                        } else {
+                            // Fallback to a smaller throw
+                            const fallbackValue = currentScore - total - 40;
+                            if (fallbackValue >= 1 && fallbackValue <= 20) {
+                                dartThrows.push(`S${fallbackValue}`);
+                                total += fallbackValue;
+                                document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + `S${fallbackValue}`;
+                            } else {
+                                dartThrows.push('S20');
+                                total += 20;
+                                document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + 'S20';
+                            }
+                        }
+                    } else {
+                        dartThrows.push(dartThrow);
+                        total += value;
+                        document.getElementById('throwInput').value += (dartCount > 0 ? ' ' : '') + dartThrow;
+                    }
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     dartCount++;
                 }
@@ -1126,7 +1197,7 @@
 
         // Update the timer with two decimal places, more frequently
         function updateTimer() {
-            const elapsed = (Date.now() - startTime) / 1000; // Time in seconds with decimals
+            const elapsed = (Date.now() - startTime) / 1000;
             document.getElementById('timer').textContent = elapsed.toFixed(2);
         }
 
@@ -1144,7 +1215,7 @@
                 const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
                 const reqInput = parseInt(document.getElementById('reqInput').value);
                 const errorMessage = document.getElementById('errorMessage');
-                const timerValue = parseFloat(document.getElementById('timer').textContent); // Use parseFloat to get decimal value
+                const timerValue = parseFloat(document.getElementById('timer').textContent);
 
                 if (!isTurnReady) {
                     errorMessage.textContent = 'Please wait for the turn to complete!';
@@ -1155,20 +1226,28 @@
                 if (isNaN(throwTotalInput) || isNaN(reqInput)) {
                     errorMessage.textContent = 'Please enter valid numbers for both fields!';
                     errorMessage.style.display = 'block';
+                    document.getElementById('throwTotalInput').classList.add('input-error');
+                    document.getElementById('reqInput').classList.add('input-error');
                     return;
                 }
 
                 if (throwTotalInput !== correctTotal) {
                     errorMessage.textContent = `Incorrect Throw total! The correct total for ${dartThrows.join(' ')} is ${correctTotal}. Try again...`;
                     errorMessage.style.display = 'block';
+                    document.getElementById('throwTotalInput').classList.add('input-error');
                     return;
+                } else {
+                    document.getElementById('throwTotalInput').classList.add('input-correct');
                 }
 
                 const expectedReq = currentScore - throwTotalInput;
                 if (reqInput !== expectedReq) {
                     errorMessage.textContent = `Incorrect Req! After throwing ${throwTotalInput}, the remaining score should be ${expectedReq}. Try again...`;
                     errorMessage.style.display = 'block';
+                    document.getElementById('reqInput').classList.add('input-error');
                     return;
+                } else {
+                    document.getElementById('reqInput').classList.add('input-correct');
                 }
 
                 if (reqInput < 0) {
@@ -1232,7 +1311,6 @@
         function startRestartGame() {
             console.log('startRestartGame called');
             try {
-                // Reset game state
                 currentScore = 501;
                 throwsCount = 0;
                 turns = 0;
@@ -1253,16 +1331,13 @@
                 document.getElementById('reqInput').value = '';
                 updateCurrentScoreDisplay();
 
-                // Enable the Add Score button
                 document.getElementById('addScoreBtn').disabled = false;
 
-                // Start the timer with a faster update interval (every 10ms)
                 if (timerInterval) {
                     clearInterval(timerInterval);
                 }
-                timerInterval = setInterval(updateTimer, 10); // Update every 10 milliseconds
+                timerInterval = setInterval(updateTimer, 10);
 
-                // Generate the first turn
                 generateTurn();
             } catch (error) {
                 console.error('Error in startRestartGame:', error);
@@ -1303,10 +1378,8 @@
                 console.error('Submit Leaderboard button not found');
             }
 
-            // Initialize leaderboard display, but do not start the game
             updateLeaderboardDisplay();
 
-            // Initialize the UI without starting the game
             document.getElementById('throwInput').value = '';
             document.getElementById('throws').textContent = '0';
             document.getElementById('turns').textContent = '0';
