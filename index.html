@@ -682,7 +682,7 @@
     </div>
 
     <div class="timer">
-        Throws: <span id="throws">0</span> | Time: <span id="timer">0</span> sec
+        Throws: <span id="throws">0</span> | Time: <span id="timer">0.00</span> sec
     </div>
 
     <div class="input-section">
@@ -701,8 +701,8 @@
 
     <div class="stats">
         <p>Turns: <span id="turns">0</span></p>
-        <p>Last Throw: <span id="lastThrow">0</span> sec</p>
-        <p>Average Throw Time: <span id="avgTime">0</span> sec</p>
+        <p>Last Throw: <span id="lastThrow">0.00</span> sec</p>
+        <p>Average Throw Time: <span id="avgTime">0.00</span> sec</p>
     </div>
 
     <div class="leaderboard-section">
@@ -781,9 +781,9 @@
         let isTurnReady = false;
         let totalThrowsSum = 0;
         let gameFinished = false;
-        let gameStarted = false; // New variable to track if the game has started
+        let gameStarted = false;
         let currentTimerValue = 0;
-        let timerInterval = null; // To manage the timer interval
+        let timerInterval = null;
 
         // Update current score display
         function updateCurrentScoreDisplay() {
@@ -861,7 +861,9 @@
             leaderboardTable.innerHTML = '';
             leaderboard.forEach((entry, index) => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${index + 1}</td><td>${entry.name}</td><td>${entry.time}</td><td>${entry.date}</td>`;
+                // Format the time to always show two decimal places
+                const formattedTime = Number.isInteger(entry.time) ? `${entry.time}.00` : entry.time.toFixed(2);
+                row.innerHTML = `<td>${index + 1}</td><td>${entry.name}</td><td>${formattedTime}</td><td>${entry.date}</td>`;
                 leaderboardTable.appendChild(row);
             });
         }
@@ -870,7 +872,8 @@
         function showGameEndModal(timerValue) {
             const modal = document.getElementById('gameEndModal');
             const congratsMessage = document.getElementById('congratsMessage');
-            congratsMessage.textContent = `Time: ${timerValue} sec`;
+            // Display the timer value with two decimal places
+            congratsMessage.textContent = `Time: ${timerValue.toFixed(2)} sec`;
             modal.style.display = 'block';
             // Stop the timer when the game ends
             if (timerInterval) {
@@ -908,7 +911,7 @@
                     attempt++;
                     await addDoc(collection(db, 'leaderboard'), {
                         name: playerName,
-                        time: currentTimerValue,
+                        time: currentTimerValue, // Store the time with decimals
                         date: recordDate,
                         timestamp: serverTimestamp()
                     });
@@ -1027,10 +1030,10 @@
             console.log('Turn generated:', { dartThrows, correctTotal, isTurnReady });
         }
 
-        // Update the timer
+        // Update the timer with two decimal places
         function updateTimer() {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            document.getElementById('timer').textContent = elapsed;
+            const elapsed = (Date.now() - startTime) / 1000; // Time in seconds with decimals
+            document.getElementById('timer').textContent = elapsed.toFixed(2);
         }
 
         // Handle adding a score
@@ -1047,7 +1050,7 @@
                 const throwTotalInput = parseInt(document.getElementById('throwTotalInput').value);
                 const reqInput = parseInt(document.getElementById('reqInput').value);
                 const errorMessage = document.getElementById('errorMessage');
-                const timerValue = parseInt(document.getElementById('timer').textContent);
+                const timerValue = parseFloat(document.getElementById('timer').textContent); // Use parseFloat to get decimal value
 
                 if (!isTurnReady) {
                     errorMessage.textContent = 'Please wait for the turn to complete!';
@@ -1144,12 +1147,12 @@
                 totalThrowTime = 0;
                 totalThrowsSum = 0;
                 gameFinished = false;
-                gameStarted = true; // Mark the game as started
+                gameStarted = true;
                 document.getElementById('throws').textContent = '0';
                 document.getElementById('turns').textContent = '0';
-                document.getElementById('lastThrow').textContent = '0';
-                document.getElementById('avgTime').textContent = '0';
-                document.getElementById('timer').textContent = '0';
+                document.getElementById('lastThrow').textContent = '0.00';
+                document.getElementById('avgTime').textContent = '0.00';
+                document.getElementById('timer').textContent = '0.00';
                 document.getElementById('errorMessage').style.display = 'none';
                 document.getElementById('throwInput').value = '';
                 document.getElementById('throwTotalInput').value = '';
@@ -1213,9 +1216,9 @@
             document.getElementById('throwInput').value = '';
             document.getElementById('throws').textContent = '0';
             document.getElementById('turns').textContent = '0';
-            document.getElementById('lastThrow').textContent = '0';
-            document.getElementById('avgTime').textContent = '0';
-            document.getElementById('timer').textContent = '0';
+            document.getElementById('lastThrow').textContent = '0.00';
+            document.getElementById('avgTime').textContent = '0.00';
+            document.getElementById('timer').textContent = '0.00';
             updateCurrentScoreDisplay();
         });
 
