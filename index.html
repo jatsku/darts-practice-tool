@@ -129,15 +129,28 @@
             top: 40px;
             right: 10px;
             z-index: 1000;
-            transition: color 0.3s;
+            background-color: #2196F3; /* Matches Start button */
+            padding: 2px; /* Small padding to frame the image */
+            border-radius: 5px; /* Rounded corners like buttons */
+            transition: background-color 0.3s;
         }
 
-        body.dark-mode .buy-me-a-coffee img {
-            filter: brightness(1.2); /* Slightly brighten in dark mode for visibility */
+        .buy-me-a-coffee:hover {
+            background-color: #1e88e5; /* Matches Start button hover */
         }
 
-        .buy-me-a-coffee:hover img {
-            filter: brightness(1.1); /* Hover effect */
+        body.dark-mode .buy-me-a-coffee {
+            background-color: #2196F3; /* Maintain same color in dark mode */
+        }
+
+        body.dark-mode .buy-me-a-coffee:hover {
+            background-color: #1e88e5;
+        }
+
+        .buy-me-a-coffee img {
+            display: block; /* Ensure no extra space below image */
+            height: 48px !important; /* 20% smaller than 60px */
+            width: 174px !important; /* 20% smaller than 217px */
         }
 
         /* Help Icon */
@@ -646,8 +659,8 @@
             }
 
             .buy-me-a-coffee img {
-                height: 40px !important; /* Adjusted for mobile */
-                width: 144px !important; /* Maintain aspect ratio */
+                height: 32px !important; /* 20% smaller than 40px (original mobile size) */
+                width: 116px !important; /* 20% smaller than 144px (original mobile size) */
             }
 
             .help-icon {
@@ -730,9 +743,9 @@
         </label>
     </div>
 
-    <!-- Buy Me a Coffee Link (Image Version) -->
+    <!-- Buy Me a Coffee Link (Image Version, 20% Smaller, Matching Start Button Color) -->
     <a href="https://www.buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">
-        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important; width: 217px !important;">
+        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 48px !important; width: 174px !important;">
     </a>
 
     <!-- Help Icon -->
