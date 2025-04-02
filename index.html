@@ -128,23 +128,16 @@
             position: fixed;
             top: 40px;
             right: 10px;
-            font-size: 12px;
-            color: #666;
-            text-decoration: none;
             z-index: 1000;
             transition: color 0.3s;
         }
 
-        body.dark-mode .buy-me-a-coffee {
-            color: #ccc;
+        body.dark-mode .buy-me-a-coffee img {
+            filter: brightness(1.2); /* Slightly brighten in dark mode for visibility */
         }
 
-        .buy-me-a-coffee:hover {
-            color: #4CAF50;
-        }
-
-        body.dark-mode .buy-me-a-coffee:hover {
-            color: #66b0ff;
+        .buy-me-a-coffee:hover img {
+            filter: brightness(1.1); /* Hover effect */
         }
 
         /* Help Icon */
@@ -650,7 +643,11 @@
             .buy-me-a-coffee {
                 top: 35px;
                 right: 5px;
-                font-size: 10px;
+            }
+
+            .buy-me-a-coffee img {
+                height: 40px !important; /* Adjusted for mobile */
+                width: 144px !important; /* Maintain aspect ratio */
             }
 
             .help-icon {
@@ -733,8 +730,10 @@
         </label>
     </div>
 
-    <!-- Buy Me a Coffee Link -->
-    <a href="https://www.buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">Buy Me a Coffee</a>
+    <!-- Buy Me a Coffee Link (Image Version) -->
+    <a href="https://www.buymeacoffee.com/jatsku" target="_blank" class="buy-me-a-coffee">
+        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important; width: 217px !important;">
+    </a>
 
     <!-- Help Icon -->
     <div class="help-icon" onclick="showHelpModal()" role="button" aria-label="Show help instructions" tabindex="0" onkeypress="if(event.key === 'Enter') showHelpModal()">?</div>
